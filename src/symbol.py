@@ -1,5 +1,4 @@
 
-
 class SymbolTable:
     def __int__(self):
         self.dataList = []

@@ -1,8 +1,10 @@
+from os import error
 import sys
-# from .lexer import *
+from lexer import lexer
+from symbol import SymbolTable
 # from .inter import *
 # from .parser import *
-# from .symbol import *
+
 
 
 def main():
@@ -14,10 +16,13 @@ def main():
     input_file = open(input_file_address, "r")
     output_file = open(output_file_address, "w")
 
+    symbolTable = new SymbolTable()
+    lexemList = lexer(input_file)
+
     input_file.close()
     output_file.close()
-    
-	# lex = new lex()
+
+	
 	# symbol = new symbol()
 	# parser = new parser(lex, symbol, input_file_address, output_file_address)
 	# parser.start()
