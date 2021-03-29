@@ -1,7 +1,7 @@
 from os import error
 import sys
 from lexer import lexer
-from symbol import SymbolTable
+from symbol import *
 # from .inter import *
 # from .parser import *
 
@@ -16,8 +16,10 @@ def main():
     input_file = open(input_file_address, "r")
     output_file = open(output_file_address, "w")
 
-    symbolTable = new SymbolTable()
-    lexemList = lexer(input_file)
+    # symbolTable = SymbolTable()
+
+    line = input_file.readline()
+    lexemList = lexer(line)
 
     input_file.close()
     output_file.close()

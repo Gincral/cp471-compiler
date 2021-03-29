@@ -1,2 +1,2 @@
-print("Hi");
-num = a+b*c/d
+num = a+b*c/d ;
+haha TRUE print("Hi");
