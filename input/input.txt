@@ -1,2 +1,4 @@
+print("haha");
+id = a;
 num = a+b*c/d ;
 haha TRUE print("Hi");

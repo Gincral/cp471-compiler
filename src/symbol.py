@@ -1,6 +1,6 @@
 
 class SymbolTable:
-    def __int__(self):
+    def __init__(self):
         self.dataList = []
 
     def appendData(self, data):
@@ -17,6 +17,10 @@ class SymbolTable:
                 data.value = value
                 return data
         return None
+
+    def printTable(self):
+        for data in self.dataList:
+            print(data.name, data.type, data.value, data.location)
     
 
 class Data:
