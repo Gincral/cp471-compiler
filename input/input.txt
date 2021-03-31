@@ -1,4 +1,4 @@
-print("haha");
-id = a;
-num = a+b*c/d ;
-haha TRUE print("Hi");
+if (expr): { if (expr): { stmt } else:{ stmt } } else: { stmt }
+result = TRUE || FALSE && TRUE;
+num = b*c/d+e ;
+a = 100 + 2*10 //11 % 3;
