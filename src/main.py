@@ -2,7 +2,8 @@ from os import error
 import sys
 from lexer import lexer
 from symbol import SymbolTable
-from parser import parser
+from parse import parse
+from runner import runner
 
 
 
@@ -18,11 +19,21 @@ def main():
     symbolTable = SymbolTable()
     line = input_file.readline()
 
-    # while line:
-    tokenList = lexer(line)
-    par = parser(symbolTable, tokenList)
-        # line = input_file.readline()
-        # print("=====================")
+    parsed = []
+    while line:
+        print("parsing:")
+        print(line)
+        tokenList = lexer(line)
+        print(tokenList)
+        par = parse(symbolTable, tokenList)
+        parsed.append(par)
+        print(par)
+        line = input_file.readline()
+    print("Parser results")
+    print(parsed[0].value)
+    # print("=====================")
+    runner(symbolTable)
+
 
     input_file.close()
     output_file.close()

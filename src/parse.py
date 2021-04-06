@@ -5,11 +5,11 @@ class Node:
         self.value = value
         self.children = []
 
-def parser (symbolTable, tokenList):
+def parse(symbolTable, tokenList):
     if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     stmtN = Node(tokenList)
     stmt(stmtN)
-    return None
+    return stmtN
 
 def stmt(root):
     print("Grammar stmt")
