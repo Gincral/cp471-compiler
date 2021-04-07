@@ -1,4 +1,5 @@
-if (expr): { if (expr): { stmt } else:{ stmt } } else: { stmt }
+if (TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
+print("hi");
 result = TRUE || FALSE && TRUE;
 num = b*c/d+e ;
 a = 100 + 2*10 //11 % 3;

@@ -9,6 +9,7 @@ def parser (symbolTable, tokenList):
     if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     stmtN = Node(tokenList)
     stmt(stmtN)
+
     return None
 
 def stmt(root):
@@ -20,7 +21,36 @@ def stmt(root):
         return assign(assignN)
     else:
         if tokenList[0].value == 'if':
-            return "haha"
+            le = len(tokenList)
+            count = 0
+            for i in range(le):
+                if tokenList[i].value == '{':
+                    count += 1
+                elif tokenList[i].value == '}':
+                    count -= 1
+                    if count == 0 and i < le-4 and tokenList[i+1].value == 'else':
+                        if tokenList[i+2].value == ':' and tokenList[i+3].value == '{' and tokenList[le-1].value == '}':
+                            print("Grammar ifstmt else")
+                            ifstmtN = Node(tokenList[:i+1])
+                            root.children.append(ifstmtN)
+                            root.children.append(Node(tokenList[i+1]))
+                            root.children.append(Node(tokenList[i+2]))
+                            root.children.append(Node(tokenList[i+3]))
+                            stmtN = Node(tokenList[i+4:le-1])
+                            root.children.append(stmtN)
+                            root.children.append(Node(tokenList[le-1]))
+                            return ifstmt(ifstmtN) and stmt(stmtN)
+                        else:
+                            print("wrong grammar: stmt")
+                            return False
+            print(count)
+            if count == 0:
+                ifstmtN = Node(tokenList)
+                root.children.append(ifstmtN)
+                return ifstmt(ifstmtN)
+            else:
+                print("wrong grammar: stmt, bracket number invalid")
+                return False
         elif tokenList[0].value == 'print':
             printN = Node(tokenList)
             root.children.append(printN)
@@ -31,19 +61,37 @@ def stmt(root):
             return dec(decN)
         else:
             print("wrong grammar: stmt")
-            return ValueError
+            return False
         
-
 def ifstmt(root):
     print("Grammar ifstmt")
-    return None
-
+    tokenList = root.value
+    le = len(tokenList)
+    for i in range(le):
+        if tokenList[i].value == ')': 
+            break
+    if i < le-3 and tokenList[1].value == '(' and tokenList[i].value ==')' and tokenList[i+1].value ==':' and tokenList[i+2].value =='{' and tokenList[le-1].value =='}': 
+        root.children.append(Node(tokenList[0]))
+        root.children.append(Node(tokenList[1]))
+        boolN = Node(tokenList[2:i])
+        root.children.append(boolN)
+        root.children.append(Node(tokenList[i]))
+        root.children.append(Node(tokenList[i+1]))
+        root.children.append(Node(tokenList[i+2]))
+        stmtN = Node(tokenList[i+3:le-1])
+        root.children.append(stmtN)
+        root.children.append(Node(tokenList[le-1]))
+        return bool(boolN) and stmt(stmtN)
+    else:
+        print("wrong grammar: ifstmt")
+        return False
+    
 def println(root):
     print("Grammar println")
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].value == '(' and tokenList[le-1].value == ')':
-        boolN = Node(tokenList[2:le-2])
+        boolN = Node(tokenList[2:le-1])
         root.children.append(Node(tokenList[0]))
         root.children.append(Node(tokenList[1]))
         root.children.append(boolN)
@@ -52,7 +100,7 @@ def println(root):
         return bool(boolN)
     else:
         print("wrong grammar: println")
-        return ValueError
+        return False
 
 def dec(root):
     print("Grammar dec")
@@ -68,7 +116,7 @@ def dec(root):
         return bool(boolN)
     else:
         print("wrong grammar: println")
-        return ValueError
+        return False
 
 def assign(root):
     print("Grammar assign")
@@ -81,7 +129,7 @@ def assign(root):
         return bool(boolN)
     else:
         print("wrong grammar: assign")
-        return ValueError
+        return False
 
 def bool(root):
     print("Grammar bool")
@@ -236,9 +284,10 @@ def term1(root):
 def factor(root):
     print("Grammar factor")
     tokenList = root.value #len of token list should be 1
+    print(tokenList[0].value)
     if len(tokenList) == 1: 
         root.children.append(Node(tokenList[0]))
         return True
     else:
         print("len of token list should be 1")
-        return ValueError
+        return False
