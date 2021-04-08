@@ -4,7 +4,7 @@ class SymbolTable:
         self.dataList = []
 
     def appendData(self, data):
-        self.append(data)
+        self.dataList.append(data)
 
     def searchData(self, name):
         for data in self.dataList:
@@ -20,12 +20,11 @@ class SymbolTable:
 
     def printTable(self):
         for data in self.dataList:
-            print(data.name, data.type, data.value, data.location)
+            print(data.name, data.type, data.value)
     
 
 class Data:
-    def __int__(self, name, type, value, location):
+    def __init__(self, name, type, value):
         self.name = name
         self.type = type
         self.value = value
-        self.location = location

@@ -1,7 +1,7 @@
 import re
 
-LEXEMES = ['def', 'string', 'boolean', 'type', 'if', 'else', 'and','&&',
- 'or', '||', '+', '-', '*', '/', '^', '=', '==', '!=', '<', '>', '<=', '>=', '(', ')', ':', '{', '}', 'print', ';']
+LEXEMES = ['def', 'string', 'boolean', 'number', 'type', 'if', 'else', 'and','&&',
+ 'or', '||', '+', '-', '*', '/', '//', '%', '^', '=', '==', '!=', '<', '>', '<=', '>=', '(', ')', ':', '{', '}', 'print', ';']
 BOOLEANS = ['TRUE', 'FALSE', 'NULL']
 
 class Token:
@@ -21,7 +21,7 @@ def lexer(line):
             stack = ''
         elif stack == '"': # check if its string
                 token = Token()
-                token.type = 'str'
+                token.type = 'string'
                 try:
                     while line[0] != '"':
                         stack += line[0]
@@ -30,7 +30,7 @@ def lexer(line):
                     line = line[1:]
                 except Exception:
                     print("missing quote")
-                    return ValueError
+                    return False
                 token.value = stack
                 lists.append(token)
                 stack = ''
@@ -44,20 +44,20 @@ def lexer(line):
             print('lex: ', token.value)
         elif stack in BOOLEANS: # check if its boolean
             token = Token()
-            token.type = 'boo'
+            token.type = 'boolean'
             token.value = stack
             lists.append(token)
             stack = ''
             print('boo: ', token.value)
         elif isnumber(stack): #check if its numbers
             token = Token()
-            token.type = 'num'
+            token.type = 'number'
             while line and (line[0]=='.' or isnumber(line[0])):
                 stack += line[0]
                 line = line[1:]
             if not isnumber(stack):
                 print("number is not correct")
-                return ValueError
+                return False
             token.value = stack
             lists.append(token)
             stack = ''
@@ -67,7 +67,7 @@ def lexer(line):
             token.type = 'id'
             if not bool(re.match("^[A-Za-z0-9_-]*$", stack)):
                 print("id is invalid")
-                return ValueError
+                return False
             token.value = stack
             lists.append(token)
             stack = ''
@@ -75,7 +75,7 @@ def lexer(line):
 
     if (lists[-1].value != ';') and (lists[-1].value != '{') and (lists[-1].value != '}'): # line should only be end with ;,{,}
         print("End of File Error")
-        return EOFError
+        return False
 
     return lists
 

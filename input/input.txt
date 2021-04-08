@@ -1,5 +1,7 @@
-if (TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
+def number num = 3;
+num = "string";
+if (TRUE || FALSE && TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
 print("hi");
-result = TRUE || FALSE && TRUE;
-num = b*c/d+e ;
-a = 100 + 2*10 //11 % 3;
+def result = TRUE || 1 && TRUE;
+def result = TRUE || FALSE && TRUE;
+a = 100 + 2*10 // 11 % 3;
