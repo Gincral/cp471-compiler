@@ -11,7 +11,6 @@ class Token:
 
 def lexer(line):
     lists = []
-    line = line[:-1] #remove /n
     stack = ''
     print("line: ",line)
     while line:
