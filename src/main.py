@@ -19,8 +19,8 @@ def main():
     line = input_file.readline()
 
     while line:
-        while line == "\n": line = input_file.readline()
-        tokenList = lexer(line)
+        while line.replace(" ", "") == "\n": line = input_file.readline()
+        tokenList = lexer(line.strip())
         if not (tokenList): print("lexer Error")
         par = parser(symbolTable, tokenList)
         if not (par): print("parser Error")
