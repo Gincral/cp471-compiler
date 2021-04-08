@@ -73,6 +73,7 @@ class Descriptors:
 
 def runner(symbolTable):
     # TODO get the intermediate code generated
+    
     # Test
     three_address = [
         ["t1", "=", "b", "*", "c"],

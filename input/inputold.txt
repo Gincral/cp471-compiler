@@ -1,4 +1,1 @@
-result = TRUE || FALSE && TRUE;
-num = b*c/d+e ;
-a = 100 + 2*10 //11 % 3;
-if (expr): { if (expr): { stmt } else:{ stmt } } else: { stmt }
+def a = 100 + 2*10 // 11 % 3;
