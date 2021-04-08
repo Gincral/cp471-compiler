@@ -1,11 +1,1 @@
-def number num = 3;
-num = "string";
-
-if (TRUE || FALSE && TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
-
-print("hi");
-
-def result = TRUE || FALSE && TRUE;
-result = TRUE || 1 && TRUE;
-
-def a = 100 + 2*10 // 11 % 3;
+def a = 100 + 2*10 // 11 % 3; 

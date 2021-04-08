@@ -62,7 +62,7 @@ def lexer(line):
             lists.append(token)
             stack = ''
             print('num: ', token.value)
-        elif len(stack) and( not line or line[0]==" " or line[0] in LEXEMES or line[:2] in LEXEMES ) : # check if its id
+        elif (stack not in LEXEMES) and len(stack) and( not line or line[0]==" " or line[0] in LEXEMES or line[:2] in LEXEMES ) : # check if its id
             token = Token()
             token.type = 'id'
             if not bool(re.match("^[A-Za-z0-9_-]*$", stack)):
