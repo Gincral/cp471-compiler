@@ -23,13 +23,16 @@ def main():
     while line:
         while line == "\n": line = input_file.readline()
         tokenList = lexer(line)
+        print("==== END LEXER ====")
         if not (tokenList): print("lexer Error")
         par = parse(symbolTable, tokenList)
+        print(par)
         if not (par): print("parser Error")
+        runner(symbolTable, par)
         line = input_file.readline()
             # line = input_file.readline()
         print("=====================")
-    runner(symbolTable)
+    # runner(symbolTable)
 
     input_file.close()
     output_file.close()

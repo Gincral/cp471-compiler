@@ -1,24 +1,28 @@
 from symbol import Data
 
 class Node:
-    def __init__(self, value):
+    def __init__(self, value, type=None):
         self.value = value
+        self.type = type
         self.children = []
 
 def parse(symbolTable, tokenList):
     if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
-    stmtN = Node(tokenList)
-    return stmt(stmtN, symbolTable)
+    stmtN = Node(tokenList, "stmt")
+    stmt(stmtN, symbolTable)
+    return stmtN
     
 
 def stmt(root, symbolTable):
     print("Grammar stmt")
     tokenList = root.value
     if tokenList[0].type == 'id':
-        assignN = Node(tokenList)
+        assignN = Node(tokenList, "assign")
         root.children.append(assignN)
         return assign(assignN, symbolTable)
     else:
+        print("we are in stmt")
+        print(tokenList[0].value)
         if tokenList[0].value == 'if':
             le = len(tokenList)
             count = 0
@@ -30,12 +34,12 @@ def stmt(root, symbolTable):
                     if count == 0 and i < le-4 and tokenList[i+1].value == 'else':
                         if tokenList[i+2].value == ':' and tokenList[i+3].value == '{' and tokenList[le-1].value == '}':
                             print("Grammar ifstmt else")
-                            ifstmtN = Node(tokenList[:i+1])
+                            ifstmtN = Node(tokenList[:i+1], "ifstmt")
                             root.children.append(ifstmtN)
                             root.children.append(Node(tokenList[i+1]))
                             root.children.append(Node(tokenList[i+2]))
                             root.children.append(Node(tokenList[i+3]))
-                            stmtN = Node(tokenList[i+4:le-1])
+                            stmtN = Node(tokenList[i+4:le-1], "stmt")
                             root.children.append(stmtN)
                             root.children.append(Node(tokenList[le-1]))
                             return ifstmt(ifstmtN, symbolTable) and stmt(stmtN, symbolTable)
@@ -55,7 +59,7 @@ def stmt(root, symbolTable):
             root.children.append(printN)
             return println(printN)
         elif tokenList[0].value == 'def':
-            decN = Node(tokenList)
+            decN = Node(tokenList, "dec")
             root.children.append(decN)
             return dec(decN, symbolTable)
         else:
@@ -72,12 +76,12 @@ def ifstmt(root, symbolTable):
     if i < le-3 and tokenList[1].value == '(' and tokenList[i].value ==')' and tokenList[i+1].value ==':' and tokenList[i+2].value =='{' and tokenList[le-1].value =='}': 
         root.children.append(Node(tokenList[0]))
         root.children.append(Node(tokenList[1]))
-        boolN = Node(tokenList[2:i])
+        boolN = Node(tokenList[2:i], "bool")
         root.children.append(boolN)
         root.children.append(Node(tokenList[i]))
         root.children.append(Node(tokenList[i+1]))
         root.children.append(Node(tokenList[i+2]))
-        stmtN = Node(tokenList[i+3:le-1])
+        stmtN = Node(tokenList[i+3:le-1], "stmt")
         root.children.append(stmtN)
         root.children.append(Node(tokenList[le-1]))
         if bool(boolN) == 'boolean': return stmt(stmtN,symbolTable)
@@ -110,12 +114,12 @@ def dec(root, symbolTable):
     if tokenList[1].type == 'lex' and tokenList[1].value in ['string', 'boolean', 'number'] and tokenList[2].type == 'id' and tokenList[3].value == '=':
         data = Data(tokenList[2].value, tokenList[1].value, True)
         symbolTable.appendData(data)
-        root.children.append(Node(tokenList[0]))
-        root.children.append(Node(tokenList[1]))
-        root.children.append(Node(tokenList[2]))
-        root.children.append(Node(tokenList[3]))
-        boolN = Node(tokenList[4:])
-        root.children.append(Node(boolN))
+        root.children.append(Node(tokenList[0], "def"))
+        root.children.append(Node(tokenList[1], "type"))
+        root.children.append(Node(tokenList[2], "id"))
+        root.children.append(Node(tokenList[3], "="))
+        boolN = Node(tokenList[4:], "bool")
+        root.children.append(boolN)
         if bool(boolN) == tokenList[1].value : 
             return True
         else:
@@ -128,9 +132,9 @@ def assign(root, symbolTable):
     print("Grammar assign")
     tokenList = root.value
     if tokenList[1].value == '=':
-        boolN = Node(tokenList[2:])
-        root.children.append(Node(tokenList[0]))
-        root.children.append(Node(tokenList[1]))
+        boolN = Node(tokenList[2:], "bool")
+        root.children.append(Node(tokenList[0], "id"))
+        root.children.append(Node(tokenList[1], "="))
         root.children.append(boolN)
         data = symbolTable.searchData(tokenList[0].value)
         if data and data.type == bool(boolN): return True
@@ -149,19 +153,19 @@ def bool(root):
     tokenList = root.value
     for i in range(len(tokenList)):
         if tokenList[i].value == '||' or tokenList[i].value == '&&':
-            equalityN = Node(tokenList[:i])
-            bool1N =  Node(tokenList[i:])
-            root.children.append(Node(equalityN))
-            root.children.append(Node(bool1N))
+            equalityN = Node(tokenList[:i], "equality")
+            bool1N =  Node(tokenList[i:], "bool'")
+            root.children.append(equalityN)
+            root.children.append(bool1N)
             type = equality(equalityN)
             if type == bool1(bool1N) and type != False:
                 return 'boolean'
             else: 
                 print("Bool error, two variables have different type")
                 return False 
-    equalityN = Node(tokenList)
-    root.children.append(Node(equalityN))
-    return equality(equalityN)
+    equalityN = Node(tokenList, "equality")
+    root.children.append(equalityN)
+    return equality(equalityN) 
 
 def bool1(root):
     print("Grammar bool1")
@@ -170,18 +174,18 @@ def bool1(root):
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '||' or tokenList[i].value == '&&':
-            equalityN = Node(tokenList[:i])
-            bool1N =  Node(tokenList[i:])
-            root.children.append(Node(equalityN))
-            root.children.append(Node(bool1N))
+            equalityN = Node(tokenList[:i], "equality")
+            bool1N =  Node(tokenList[i:], "bool1")
+            root.children.append(equalityN)
+            root.children.append(bool1N)
             type = equality(equalityN)
             if type == bool1(bool1N) and type != False:
                 return 'boolean'
             else: 
                 print("Bool1 error, two variables have different type")
                 return False 
-    equalityN = Node(tokenList)
-    root.children.append(Node(equalityN))
+    equalityN = Node(tokenList, "equality")
+    root.children.append(equalityN)
     return equality(equalityN)
 
 def equality(root):
@@ -189,18 +193,18 @@ def equality(root):
     tokenList = root.value
     for i in range(len(tokenList)):
         if tokenList[i].value == '==' or tokenList[i].value == '!=':
-            relationN = Node(tokenList[:i])
-            equalityN =  Node(tokenList[i:])
-            root.children.append(Node(relationN))
-            root.children.append(Node(equalityN))
+            relationN = Node(tokenList[:i], "relation")
+            equalityN =  Node(tokenList[i:], "equality'")
+            root.children.append(relationN)
+            root.children.append(equalityN)
             type = relation(relationN)
             if type == equality1(equalityN) and type != False:
                 return 'boolean'
             else: 
                 print("Equality error, two variables have different type")
                 return False 
-    relationN = Node(tokenList)
-    root.children.append(Node(relationN))
+    relationN = Node(tokenList, "relation")
+    root.children.append(relationN)
     return relation(relationN)
 
 def equality1(root):
@@ -210,18 +214,18 @@ def equality1(root):
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '==' or tokenList[i].value == '!=':
-            relationN = Node(tokenList[:i])
-            equalityN =  Node(tokenList[i:])
-            root.children.append(Node(relationN))
-            root.children.append(Node(equalityN))
+            relationN = Node(tokenList[:i], "relation")
+            equalityN =  Node(tokenList[i:], "equality1")
+            root.children.append(relationN)
+            root.children.append(equalityN)
             type = relation(relationN)
             if type == equality1(equalityN) and type != False:
                 return 'boolean'
             else: 
                 print("Equality1 error, two variables have different type")
                 return False 
-    relationN = Node(tokenList)
-    root.children.append(Node(relationN))
+    relationN = Node(tokenList, "relation")
+    root.children.append(relationN)
     return relation(relationN)
 
 def relation(root):
@@ -229,39 +233,39 @@ def relation(root):
     tokenList = root.value
     for i in range(len(tokenList)):
         if tokenList[i].value == '<' or tokenList[i].value == '>' or tokenList[i].value == '>=' or tokenList[i].value == '<=':
-            exprN = Node(tokenList[:i])
-            relationN =  Node(tokenList[i:])
-            root.children.append(Node(exprN))
-            root.children.append(Node(relationN))
+            exprN = Node(tokenList[:i], "expr")
+            relationN =  Node(tokenList[i:], "relation'")
+            root.children.append(exprN)
+            root.children.append(relationN)
             type = expr(exprN)
             if type == relation1(relationN) and type != False:
                 return 'boolean'
             else: 
                 print("Relation error, two variables have different type")
                 return False 
-    exprN = Node(tokenList)
-    root.children.append(Node(exprN))
+    exprN = Node(tokenList, "expr")
+    root.children.append(exprN)
     return expr(exprN)
 
 def relation1(root):
     print("Grammar relation1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0]))
+    root.children.append(Node(tokenList[0], "compar"))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value in ['<', '>', '<=', '>=']:
-            exprN = Node(tokenList[:i])
-            relationN =  Node(tokenList[i:])
-            root.children.append(Node(exprN))
-            root.children.append(Node(relationN))
+            exprN = Node(tokenList[:i], "expr")
+            relationN =  Node(tokenList[i:], "relation'")
+            root.children.append(exprN)
+            root.children.append(relationN)
             type = expr(exprN)
             if type == relation1(relationN) and type != False:
                 return 'boolean'
             else: 
                 print("Relation1 error, two variables have different type")
                 return False 
-    exprN = Node(tokenList)
-    root.children.append(Node(exprN))
+    exprN = Node(tokenList, "expr")
+    root.children.append(exprN)
     return expr(exprN)
 
 def expr(root):
@@ -269,39 +273,39 @@ def expr(root):
     tokenList = root.value
     for i in range(len(tokenList)):
         if tokenList[i].value == '+' or tokenList[i].value == '-':
-            termN = Node(tokenList[:i])
-            exprN =  Node(tokenList[i:])
-            root.children.append(Node(termN))
-            root.children.append(Node(exprN))
+            termN = Node(tokenList[:i], "term")
+            exprN =  Node(tokenList[i:], "expr'")
+            root.children.append(termN)
+            root.children.append(exprN)
             type = term(termN)
             if type == expr1(exprN) and type != False:
                 return type
             else: 
                 print("Expr error, two variables have different type")
                 return False 
-    termN = Node(tokenList)
-    root.children.append(Node(termN))
+    termN = Node(tokenList, "term")
+    root.children.append(termN)
     return term(termN)
 
 def expr1(root):
     print("Grammar expr1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0]))
+    root.children.append(Node(tokenList[0], "value"))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '+' or tokenList[i].value == '-':
-            termN = Node(tokenList[:i])
-            exprN =  Node(tokenList[i:])
-            root.children.append(Node(termN))
-            root.children.append(Node(exprN))
+            termN = Node(tokenList[:i], "term")
+            exprN =  Node(tokenList[i:], "expr'")
+            root.children.append(termN)
+            root.children.append(exprN)
             type = term(termN)
             if type == expr1(exprN) and type != False:
                 return type
             else: 
                 print("Expr1 error, two variables have different type")
                 return False 
-    termN = Node(tokenList)
-    root.children.append(Node(termN))
+    termN = Node(tokenList, "term")
+    root.children.append(termN)
     return term(termN)
 
 def term(root):
@@ -309,18 +313,18 @@ def term(root):
     tokenList = root.value
     for i in range(len(tokenList)):
         if tokenList[i].value in ['*', '/', '%', '//']:
-            factorN = Node(tokenList[:i])
-            termN =  Node(tokenList[i:])
-            root.children.append(Node(factorN))
-            root.children.append(Node(termN))
+            factorN = Node(tokenList[:i], "factor")
+            termN =  Node(tokenList[i:], "term'")
+            root.children.append(factorN)
+            root.children.append(termN)
             type = factor(factorN)
             if type == term1(termN) and type != False:
                 return type
             else: 
                 print("Term error, two variables have different type")
                 return False 
-    factorN = Node(tokenList)
-    root.children.append(Node(factorN))
+    factorN = Node(tokenList, "factor")
+    root.children.append(factorN)
     return factor(factorN)
 
 def term1(root):
@@ -330,18 +334,18 @@ def term1(root):
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value in ['*', '/', '%', '//']:
-            factorN = Node(tokenList[:i])
-            termN =  Node(tokenList[i:])
-            root.children.append(Node(factorN))
-            root.children.append(Node(termN))
+            factorN = Node(tokenList[:i], "factor")
+            termN =  Node(tokenList[i:], "term'")
+            root.children.append(factorN)
+            root.children.append(termN)
             type = factor(factorN)
             if type == term1(termN) and type != False:
                 return type
             else: 
                 print("Term1 error, two variables have different type")
                 return False 
-    factorN = Node(tokenList)
-    root.children.append(Node(factorN))
+    factorN = Node(tokenList, "factor")
+    root.children.append(factorN)
     return factor(factorN)
 
 def factor(root):
@@ -349,7 +353,7 @@ def factor(root):
     tokenList = root.value #len of token list should be 1
     print(tokenList[0].value, tokenList[0].type)
     if len(tokenList) == 1: 
-        root.children.append(Node(tokenList[0]))
+        root.children.append(Node(tokenList[0], "value"))
         return tokenList[0].type
     else:
         print("len of token list should be 1")
