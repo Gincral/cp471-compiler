@@ -1,1 +1,1 @@
-num = a + b*c /d % e;
+if (2 < 5 + 6 * 3 + 5): { def number y = 0; } else:{ z = 0; }

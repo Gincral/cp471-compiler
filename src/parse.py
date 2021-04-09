@@ -9,8 +9,8 @@ class Node:
 def parse(symbolTable, tokenList):
     if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     stmtN = Node(tokenList, "stmt")
-    stmt(stmtN, symbolTable)
-    return stmtN
+    if (stmt(stmtN, symbolTable)):
+        return stmtN
     
 
 def stmt(root, symbolTable):
@@ -290,7 +290,7 @@ def expr(root):
 def expr1(root):
     print("Grammar expr1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0], "value"))
+    root.children.append(Node(tokenList[0], tokenList[0].value))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '+' or tokenList[i].value == '-':
@@ -352,7 +352,8 @@ def factor(root):
     print("Grammar factor")
     tokenList = root.value #len of token list should be 1
     print(tokenList[0].value, tokenList[0].type)
-    if len(tokenList) == 1: 
+    # TODO
+    if len(tokenList) == 1 or (len(tokenList) == 2 and tokenList[1].value == ";"): 
         root.children.append(Node(tokenList[0], "value"))
         return tokenList[0].type
     else:
