@@ -45,20 +45,29 @@ class ThreeAddressCode:
         self.code = []
         self.labels = 0
         self.temps = 0
+        self.expectingLabel = None
 
     def addCode(self, line):
-        self.code.append(line)
+        if self.expectingLabel is not None:
+            self.code.append(f"{self.expectingLabel}: {line}")
+            self.expectingLabel = None
+        else:
+            self.code.append(f"    {line}")
 
     def getCode(self):
         return self.code
 
     def printCode(self):
         print("Intermediate Code:")
-        print(self.code)
+        for line in self.code:
+            print(line)
 
     def addLabel(self):
         self.labels += 1
         return f"L{self.labels}"
+        
+    def expectLabel(self):
+        self.expectingLabel = f"L{self.labels}"
 
     def addTemp(self):
         self.temps += 1
@@ -75,24 +84,44 @@ def walkTree(tree):
     threeAddr.printCode()
 
 def walkStmt(root):
-    root = root.children[0]
-    if root.type == "dec":
-        print("we're at the dec")
-        walkDec(root)
-    elif root.type == "assign":
-        print("we're at the assign")
-        walkAssign(root)
-    elif root.type == "ifstmt":
+    print("What kind of statements are here?")
+    for child in root.children:
+        print(child.type)
+    if root.children[0].type == "ifstmt":
         print("we're at the ifstmt")
-        walkIfStmt(root)
-        if len(root.children) > 1:
-            label = threeAddr.addLabel()
-            threeAddr.addCode(f"goto {label}")
-            for child in root.children:
-                if child.type == "stmt":
-                    walkStmt(child)
+        walkIfStmt(root.children[0])
+        for child in root.children:
+            print(child.type)
+            if child.type == "stmt":
+                print("ELSE DETECTED")
+                label = threeAddr.addLabel()
+                threeAddr.addCode(f"goto {label}")
+                threeAddr.expectLabel()
+                print("STMT DETECTED")
+                walkStmt(child)
+    else:
+        root = root.children[0]
+        if root.type == "dec":
+            print("we're at the dec")
+            walkDec(root)
+        elif root.type == "assign":
+            print("we're at the assign")
+            walkAssign(root)
+        elif root.type == "println":
+            print("we're at the println")
+            walkPrintln(root)
+
+def walkPrintln(root):
+    print("PRINTLN DETECTED")
+    boolNode = None
+    for child in root.children:
+        if child.type == "bool":
+            boolNode = child
+    temp = walkBool(boolNode)
+    threeAddr.addCode(f"call print, {temp}")
 
 def walkDec(root):
+    print(len(root.children))
     toAssign = root.children[2]
     root = root.children[-1]
     if root.type == "bool":
@@ -119,7 +148,9 @@ def walkIfStmt(root):
             label = threeAddr.addLabel()
             line = f"if {walkBool(child)} goto {label}"
             threeAddr.addCode(line)
-            return line
+            threeAddr.expectLabel()
+        elif child.type == "stmt":
+            walkStmt(child)
 
 
 def walkBool(root):
@@ -134,45 +165,116 @@ def walkBool(root):
     
 def walkBool1(root):
 # TODO
+    print("im bool1")
     print(root.children[0].type)
     print(root.children[1].type)
     if root.children[1].type == "equality":
         print("we've got an equality")
         compare = root.children[0].value.value
-        line = f"{walkEquality(root.children[1])}"
-        print(line)
-        # tokens = line.split(" ")
-        # print(tokens)
-        # temp = threeAddr.addTemp()
-        # new_temp = temp
-        # if len(tokens) > 2:
-        #     threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
-        #     i = 3
-        #     while i < len(tokens) - 1:
-        #         print(i)
-        #         new_temp = threeAddr.addTemp()
-        #         token_oper = tokens[i]
-        #         i += 1
-        #         token_value = tokens[i]
-        #         i += 1
-        #         threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
-        #         temp = new_temp
-        # else:
-        #     threeAddr.addCode(f"{temp} = {tokens[0]}")
-        # threeAddr.printCode()
-        # return f"{oper} {new_temp}"
+        if len(root.children) > 2:
+            print("haha")
+            # TODO this works but isn't correct
+            # line = f"{walkEquality(root.children[1])} {walkBool1(root.children[2])}"
+            # return line
+            line = f"{walkEquality(root.children[1])}"
+            tokens = line.split(" ")
+            print(tokens)
+            temp = threeAddr.addTemp() 
+            new_temp = temp
+            if len(tokens) > 2:
+                threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+                i = 3
+                while i < len(tokens) - 1:
+                    print(i)
+                    new_temp = threeAddr.addTemp()
+                    token_oper = tokens[i]
+                    i += 1
+                    token_value = tokens[i]
+                    i += 1
+                    threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+                    temp = new_temp
+            else:
+                threeAddr.addCode(f"{temp} = {tokens[0]}")
+            threeAddr.printCode()
+            return f"{compare} {new_temp}"
+        else:
+            line = f"{walkEquality(root.children[1])} {walkBool1(root.children[2])}"
+            return line
 
 
 def walkEquality(root):
-    root = root.children[0]
-    if root.type == "relation":
-        print("we're at the relation")
-        return walkRelation(root)
+    if len(root.children) == 1:
+        root = root.children[0]
+        if root.type == "relation":
+            print("we're at the relation")
+            return walkRelation(root)
+    else:
+        line = f"{walkRelation(root.children[0])} {walkEquality1(root.children[1])}"
+        return line
+
+def walkEquality1(root):
+    # TODO
+    print(root.children[0].type)
+    print(root.children[1].type)
+    if len(root.children) == 2:
+        print("let us go equality1")
+        compare = root.children[0].value.value
+        line = f"{compare} {walkRelation(root.children[1])}"
+        print(line)
+        # return line
+        tokens = line.split(" ")
+        print(tokens)
+        temp = threeAddr.addTemp()
+        new_temp = temp
+        if len(tokens) > 2:
+            print("creating temps for equality1")
+            print(tokens)
+            threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+            i = 3
+            while i < len(tokens) - 1:
+                print(i)
+                new_temp = threeAddr.addTemp()
+                token_oper = tokens[i]
+                i += 1
+                token_value = tokens[i]
+                i += 1
+                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+                temp = new_temp
+        else:
+            threeAddr.addCode(f"{temp} = {tokens[0]}")
+    else:
+        print("let us go equality1")
+        compare = root.children[0].value.value
+        line = f"{compare} {walkRelation(root.children[1])}"
+        print(line)
+        # return line
+        tokens = line.split(" ")
+        print(tokens)
+        temp = threeAddr.addTemp()
+        new_temp = temp
+        if len(tokens) > 2:
+            print("creating temps for equality1")
+            print(tokens)
+            threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+            i = 3
+            while i < len(tokens) - 1:
+                print(i)
+                new_temp = threeAddr.addTemp()
+                token_oper = tokens[i]
+                i += 1
+                token_value = tokens[i]
+                i += 1
+                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+                temp = new_temp
+        threeAddr.printCode()
+        return f"{oper} {new_temp}"
 
 def walkRelation(root):
     if len(root.children) == 1:
-        print("we're at the expr")
-        return walkExpr(root)
+        root = root.children[0]
+        if root.type == "expr":
+            print("we're at the expr")
+            return walkExpr(root)
     else:
         line = f"{walkExpr(root.children[0])} {walkRelation1(root.children[1])}"
         return line
@@ -184,6 +286,8 @@ def walkRelation1(root):
         line = f"{walkCompar(root.children[0])} {walkExpr(root.children[1])}"
         return line
     else:
+        line = f"{walkCompar(root.children[0])} {walkExpr(root.children[1])} {walkRelation1(root.children[2])}"
+        return line
         print("haihdasd")
 
 def walkCompar(root):
@@ -192,6 +296,8 @@ def walkCompar(root):
     return root.value.value
 
 def walkExpr(root):
+    print(root.type)
+    print(len(root.children))
     if len(root.children) == 1:
         root = root.children[0]
         if root.type == "term":
@@ -210,7 +316,7 @@ def walkExpr(root):
 def walkExpr1(root):
     print("expr1:")
     print(len(root.children))
-    # TODO
+    # TODO handle recursive expr1
     if len(root.children) == 1:
         print('idk')
     else:
@@ -239,7 +345,6 @@ def walkExpr1(root):
                     temp = new_temp
             else:
                 threeAddr.addCode(f"{temp} = {tokens[0]}")
-            threeAddr.printCode()
             return f"{oper} {new_temp}"
 
 def walkTerm(root):
@@ -269,13 +374,6 @@ def walkFactor(root):
     print(root.value[0].value)
     return root.value[0].value
 
-#  Help
-# t1 = 2*10
-# t2 = t1 / 11
-# t3 = t2 % 3
-# t4 = 100 + t3
-# a = t4
-
 def runner(symbolTable, tree):
     inter = []
     print(tree.value[0].value)
@@ -283,27 +381,6 @@ def runner(symbolTable, tree):
     three_address_split = []
     for line in threeAddr.getCode():
         three_address_split.append(line.split(" "))
-    
-    # # Test - this works so far
-    # three_address = [
-    #     ["t1", "=", "b", "*", "c"],
-    #     ["t2", "=", "t1", "/", "d"],
-    #     ["t3", "=", "t2", "%", "e"],
-    #     ["t4", "=", "a", "+", "t3"],
-    #     ["num", "=", "t4"]
-    # ]
-    # three_address = [
-    #     ["t1", "=", "a", "+", "b"],
-    #     ["if", "x", "<", "t1", "goto", "L2"],
-    #     ["goto", "L1"],
-    #     ["L1:", "if", "x", ">", "c", "goto", "L2"],
-    #     ["goto", "L4"],
-    #     ["L2:", "if", "x", "<=", "d", "goto", "L3"],
-    #     ["goto", "L4"],
-    #     ["L3:", "y", "=", "0"],
-    #     ["L4:", "if", "x", ">=", "e", "goto", "L5"],
-    #     ["L5:", "z", "=", "0"]
-    # ]
     # printIntermediate(three_address)
     # print("===============")
     descriptors = Descriptors()

@@ -48,14 +48,14 @@ def stmt(root, symbolTable):
                             return False
             print(count)
             if count == 0:
-                ifstmtN = Node(tokenList)
+                ifstmtN = Node(tokenList, "ifstmt")
                 root.children.append(ifstmtN)
                 return ifstmt(ifstmtN, symbolTable)
             else:
                 print("wrong grammar: stmt, bracket number invalid")
                 return False
         elif tokenList[0].value == 'print':
-            printN = Node(tokenList)
+            printN = Node(tokenList, "println")
             root.children.append(printN)
             return println(printN)
         elif tokenList[0].value == 'def':
@@ -97,7 +97,7 @@ def println(root):
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].value == '(' and tokenList[le-1].value == ')':
-        boolN = Node(tokenList[2:le-1])
+        boolN = Node(tokenList[2:le-1], "bool")
         root.children.append(Node(tokenList[0]))
         root.children.append(Node(tokenList[1]))
         root.children.append(boolN)
