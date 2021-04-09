@@ -4,8 +4,8 @@ from lexer import lexer
 from symbol import SymbolTable
 from symbol import SymbolTable, Data
 from parse import parse
-from runner import runner
-
+from inter import inter, getThreeAddr
+from generator import generator
 
 
 def main():
@@ -28,11 +28,13 @@ def main():
         par = parse(symbolTable, tokenList)
         print(par)
         if not (par): print("parser Error")
-        runner(symbolTable, par)
+        inter(symbolTable, par)
         line = input_file.readline()
             # line = input_file.readline()
         print("=====================")
-    # runner(symbolTable)
+    
+    threeAddr = getThreeAddr()
+    generator(symbolTable, threeAddr)
 
     input_file.close()
     output_file.close()
