@@ -152,7 +152,7 @@ def bool(root):
     print("Grammar bool")
     tokenList = root.value
     for i in range(len(tokenList)):
-        if tokenList[i].value == '||' or tokenList[i].value == '&&':
+        if tokenList[i].value == '||' or tokenList[i].value == '&&' or tokenList[i].value == "and" or tokenList[i].value == "or":
             equalityN = Node(tokenList[:i], "equality")
             bool1N =  Node(tokenList[i:], "bool'")
             root.children.append(equalityN)
@@ -170,7 +170,7 @@ def bool(root):
 def bool1(root):
     print("Grammar bool1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0]))
+    root.children.append(Node(tokenList[0], tokenList[0].value))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '||' or tokenList[i].value == '&&':
@@ -210,7 +210,7 @@ def equality(root):
 def equality1(root):
     print("Grammar equality1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0]))
+    root.children.append(Node(tokenList[0], tokenList[0].value))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value == '==' or tokenList[i].value == '!=':
@@ -250,7 +250,7 @@ def relation(root):
 def relation1(root):
     print("Grammar relation1")
     tokenList = root.value
-    root.children.append(Node(tokenList[0], "compar"))
+    root.children.append(Node(tokenList[0], tokenList[0].value))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
         if tokenList[i].value in ['<', '>', '<=', '>=']:

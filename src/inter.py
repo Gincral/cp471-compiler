@@ -53,6 +53,9 @@ class ThreeAddressCode:
         self.temps += 1
         return f"t{self.temps}"
 
+    def getLastTemp(self):
+        return f"t{self.temps}"
+
 threeAddr = ThreeAddressCode()
 
 def walkTree(tree):
@@ -102,8 +105,15 @@ def walkDec(root):
     root = root.children[-1]
     if root.type == "bool":
         print("walking bool")
-        line = f"{toAssign.value.value} = {walkBool(root)}"
-        threeAddr.addCode(line)
+        returnValue = walkBool(root)
+        print(f"returnValue = {returnValue}")
+        # TODO where is empty string coming from
+        if returnValue is None or returnValue is "":
+            line = f"{toAssign.value.value} = {threeAddr.getLastTemp()}"
+            threeAddr.addCode(line)
+        else:
+            line = f"{toAssign.value.value} = {returnValue}"
+            threeAddr.addCode(line)
 
 def walkAssign(root):
     toAssign = root.children[0]
@@ -119,7 +129,12 @@ def walkIfStmt(root):
     for child in root.children:
         if child.type == "bool":
             label1 = threeAddr.addLabel()
-            line = f"if {walkBool(child)} goto {label1}"
+            result = walkBool(child, fromIf=True)
+            line = ""
+            if result is not None and result is not "":
+                line = f"if {result} goto {label1}"
+            else:
+                line = f"if {threeAddr.getLastTemp()} goto {label1}"
             threeAddr.addCode(line)
             label2 = threeAddr.addLabel()
             line = f"goto {label2}"
@@ -130,63 +145,123 @@ def walkIfStmt(root):
             walkStmt(child)
 
 
-def walkBool(root):
+def walkBool(root, fromIf=False):
     if len(root.children) == 1:
         root = root.children[0]
         if root.type == "equality":
             print("walking equality")
-            return walkEquality(root)
+            result = walkEquality(root, fromIf=fromIf)
+            print(f"walkbool returning: {result}")
+            return result
     else:
-        line = f"{walkEquality(root.children[0])} {walkBool1(root.children[1])}"
-        return line
-    
-def walkBool1(root):
-# TODO
-    print("walking bool1")
+        equality = walkEquality(root.children[0], fromIf=fromIf)
+        line = walkBool1(root.children[1], hasTerm=equality, fromIf=fromIf)
+        print(f"Walkbool will return: {line}")
+        return generateCode(line)
+
+# TODO: this can probably return if 2 < t3 instead of creating t4 = 2 < t3 and returning that
+def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
+    print("expr1:")
+    print("where did the term go")
+    print(hasTerm)
+    threeAddr.printCode()
     if root.children[1].type == "equality":
-        compare = root.children[0].value.value
-        if len(root.children) > 2:
-            print("mess")
-            # TODO this works but isn't correct
-            # line = f"{walkEquality(root.children[1])} {walkBool1(root.children[2])}"
-            # return line
-            line = f"{walkEquality(root.children[1])}"
-            tokens = line.split(" ")
-            print(tokens)
-            temp = threeAddr.addTemp() 
-            new_temp = temp
-            if len(tokens) > 2:
-                threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
-                i = 3
-                while i < len(tokens) - 1:
-                    print(i)
-                    new_temp = threeAddr.addTemp()
-                    token_oper = tokens[i]
-                    i += 1
-                    token_value = tokens[i]
-                    i += 1
-                    threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
-                    temp = new_temp
+        print("running walkEquality")
+        compare = root.children[0].type
+        print(f"whats compare? {compare}")
+        line = f"{walkEquality(root.children[1])}"
+        temp = ""
+        new_temp = ""
+        tokens = line.split(" ")
+        if len(tokens) == 1:
+            # Ensures addition/subtraction is performed from left to right
+            if hasTerm:
+                temp = threeAddr.addTemp()
+                print("I RETURNED")
+                threeAddr.addCode(f"{temp} = {hasTerm} {compare} {tokens[0]}")
             else:
-                threeAddr.addCode(f"{temp} = {tokens[0]}")
-            threeAddr.printCode()
-            return f"{compare} {new_temp}"
+                print("NO, I RETURNED!")
+                return f"{compare} {tokens[0]}"
+        # print(tokens)
+        print("what's the line that got returned?")
+        print(line)
+        # If a long line is returned, generate a bunch of temp variables
+        if len(tokens) > 2:
+            print(f"FROMIF BOOL? {fromIf}")
+            if fromIf:
+                label = threeAddr.addLabel()
+                threeAddr.addCode(f"if {tokens[0]} {tokens[1]} {tokens[2]} goto {label}")
+            else:
+                temp = threeAddr.addTemp()
+                new_temp = temp
+                threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+            i = 3
+            while i < len(tokens) - 1:
+                print(i)
+                new_temp = threeAddr.addTemp()
+                token_oper = tokens[i]
+                i += 1
+                token_value = tokens[i]
+                i += 1
+                print(f"ADDING: {new_temp} = {temp} {token_oper} {token_value}")
+                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+                temp = new_temp
+        # TODO do i need??
+        # elif len(tokens) > 1:
+        #     print("im lost")
+        #     print(tokens[0])
+        #     print(tokens[1])
+        #     threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
         else:
-            line = f"{walkEquality(root.children[1])} {walkBool1(root.children[2])}"
-            return line
+            # Use generated temp from previous steps to ensure actions are performed from left to right
+            if useTemp:
+                new_temp = threeAddr.addTemp()
+                threeAddr.addCode(f"{new_temp} = {useTemp} {compare} {tokens[0]}")
+                print("Nah it was me")
+                #  todo may not need to return here
+                return f"{new_temp}"
+            else:
+                print("yikes")
+                print(tokens)
+                # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
+        # Recursively run the rest of the bool1s
+        if len(root.children) > 2:
+            # TODO should i check this here?
+            # if hasTerm:
+            #     print("Term detected")
+            #     threeAddr.addCode(f"{hasTerm} {oper} {new_temp}")
+            line = walkBool1(root.children[2], temp, fromIf=fromIf)
+            tokens = line.split(" ")
+            print(f"new_temp = {new_temp}")
+            if len(tokens) == 1:
+                new_temp = tokens[0]
+            else:
+                print('odsf')
+                get_temp = threeAddr.getLastTemp()
+                new_temp = threeAddr.addTemp()
+                print("ok culprit here")
+                print(f"{new_temp} = {get_temp} {line}")
+                threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
+            print("WHAT DID THIS RETURN?")
+            print(line)
+            # return test
+        print("the end of the world")
+        return f"{new_temp}"
+        # return f"{oper} {new_temp}"
 
-
-def walkEquality(root):
+def walkEquality(root, fromIf=False):
     if len(root.children) == 1:
         root = root.children[0]
         if root.type == "relation":
             print("walking relation")
-            return walkRelation(root)
+            return walkRelation(root, fromIf)
     else:
-        line = f"{walkRelation(root.children[0])} {walkEquality1(root.children[1])}"
-        return line
+        print("What does this return anyway?")
+        print(walkRelation(root.children[0]))
+        line = f"{walkRelation(root.children[0], fromIf)} {walkEquality1(root.children[1], fromIf)}"
+        return generateCode(line)
 
-def walkEquality1(root):
+def walkEquality1OLD(root):
     print("walking equality1")
     if len(root.children) == 2:
         compare = root.children[0].value.value
@@ -239,7 +314,95 @@ def walkEquality1(root):
         threeAddr.printCode()
         return f"{oper} {new_temp}"
 
-def walkRelation(root):
+def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
+    print("expr1:")
+    print("where did the term go")
+    print(hasTerm)
+    threeAddr.printCode()
+    if root.children[1].type == "relation":
+        print("running walkRelation")
+        equal = root.children[0].type
+        print(f"whats compare? {equal}")
+        line = f"{walkRelation(root.children[1], fromIf)}"
+        # print(line)
+        temp = ""
+        new_temp = ""
+        tokens = line.split(" ")
+        if len(tokens) == 1:
+            # Ensures addition/subtraction is performed from left to right
+            if hasTerm:
+                temp = threeAddr.addTemp()
+                print("I RETURNED")
+                threeAddr.addCode(f"{temp} = {hasTerm} {equal} {tokens[0]}")
+            else:
+                print("NO, I RETURNED!")
+                return f"{equal} {tokens[0]}"
+        # print(tokens)
+        print("what's the line that got returned?")
+        print(line)
+        # If a long line is returned, generate a bunch of temp variables
+        if len(tokens) > 2:
+            print(f"FROMIF EQUALITY? {fromIf}")
+            if fromIf:
+                label = threeAddr.addLabel()
+                threeAddr.addCode(f"if {tokens[0]} {tokens[1]} {tokens[2]} goto {label}")
+            else:
+                temp = threeAddr.addTemp()
+                new_temp = temp
+                threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+            i = 3
+            while i < len(tokens) - 1:
+                print(i)
+                new_temp = threeAddr.addTemp()
+                token_oper = tokens[i]
+                i += 1
+                token_value = tokens[i]
+                i += 1
+                print(f"ADDING: {new_temp} = {temp} {token_oper} {token_value}")
+                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+                temp = new_temp
+        # TODO do i need??
+        # elif len(tokens) > 1:
+        #     print("im lost")
+        #     print(tokens[0])
+        #     print(tokens[1])
+        #     threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
+        else:
+            # Use generated temp from previous steps to ensure actions are performed from left to right
+            if useTemp:
+                new_temp = threeAddr.addTemp()
+                threeAddr.addCode(f"{new_temp} = {useTemp} {equal} {tokens[0]}")
+                print("Nah it was me")
+                #  todo may not need to return here
+                return f"{new_temp}"
+            else:
+                print("yikes")
+                print(tokens)
+                # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
+        # Perform any actions that occur after the operations /, //, *, %
+        if len(root.children) > 2:
+            # TODO should i check this here?
+            # if hasTerm:
+            #     print("Term detected")
+            #     threeAddr.addCode(f"{hasTerm} {oper} {new_temp}")
+            line = walkEquality1(root.children[2], temp)
+            tokens = line.split(" ")
+            print(f"new_temp = {new_temp}")
+            if len(tokens) == 1:
+                new_temp = tokens[0]
+            else:
+                get_temp = threeAddr.getLastTemp()
+                new_temp = threeAddr.addTemp()
+                threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
+            print("WHAT DID THIS RETURN?")
+            print(line)
+            # return test
+        # if len(root.)
+        print("the end of the world")
+        return f"{new_temp}"
+        # return f"{oper} {new_temp}"
+
+def walkRelation(root, fromIf=False):
     if len(root.children) == 1:
         root = root.children[0]
         if root.type == "expr":
@@ -247,6 +410,8 @@ def walkRelation(root):
             return walkExpr(root)
     else:
         line = f"{walkExpr(root.children[0])} {walkRelation1(root.children[1])}"
+        print("walkRelation second case returned:")
+        print(line)
         return line
 
 def walkRelation1(root):
@@ -271,31 +436,51 @@ def walkExpr(root):
             return walkTerm(root)
     else:
         if root.children[0].type == "term" and root.children[1].type == "expr'":
-            print("running walkTerm and walkExpr1")
-            line = f"{walkTerm(root.children[0])} {walkExpr1(root.children[1])}"
+            # print("running walkTerm and walkExpr1")
+            term = walkTerm(root.children[0])
+            print(f"RECEIVED TERM: {term}")
+            line = walkExpr1(root.children[1], hasTerm=term)
+            # # THIS WORKS kinda but still results in bad order
+            # line = f"{walkTerm(root.children[0])} {walkExpr1(root.children[1])}"
             print(f"walkExpr received: {line}")
-            temp = threeAddr.addTemp()
-            threeAddr.addCode(f"{temp} = {line}")
-            return temp
-        print(line)
+            return line
+            # tokens = line.split(" ")
+            # temp = threeAddr.addTemp()
+            # threeAddr.addCode(f"{temp} = {line}")
+            # return temp
     
 def walkExpr1(root, useTemp=None, hasTerm=None):
     print("expr1:")
-    # print(root.children[0].type)
-    # print(root.children[1].type)
+    print("where did the term go")
+    print(hasTerm)
+    threeAddr.printCode()
     if root.children[1].type == "term":
         print("running walkTerm")
         oper = root.children[0].type
         print(f"whats oper? {oper}")
         line = f"{walkTerm(root.children[1])}"
         # print(line)
+        temp = ""
+        new_temp = ""
         tokens = line.split(" ")
+        if len(tokens) == 1:
+            # Ensures addition/subtraction is performed from left to right
+            if hasTerm:
+                temp = threeAddr.addTemp()
+                print("I RETURNED")
+                print("is this the culprit?")
+                print(f"{temp} = {hasTerm} {oper} {tokens[0]}")
+                threeAddr.addCode(f"{temp} = {hasTerm} {oper} {tokens[0]}")
+            else:
+                print("NO, I RETURNED!")
+                return f"{oper} {tokens[0]}"
         # print(tokens)
-        temp = threeAddr.addTemp()
-        new_temp = temp
         print("what's the line that got returned?")
         print(line)
+        # If a long line is returned, generate a bunch of temp variables
         if len(tokens) > 2:
+            temp = threeAddr.addTemp()
+            new_temp = temp
             threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
             i = 3
             while i < len(tokens) - 1:
@@ -309,28 +494,45 @@ def walkExpr1(root, useTemp=None, hasTerm=None):
                 threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
                 temp = new_temp
         # TODO do i need??
-        elif len(tokens) > 1:
-            print("im lost")
-            print(tokens[0])
-            print(tokens[1])
-            threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
+        # elif len(tokens) > 1:
+        #     print(tokens[0])
+        #     print(tokens[1])
+        #     threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
         else:
+            # Use generated temp from previous steps to ensure actions are performed from left to right
             if useTemp:
+                new_temp = threeAddr.addTemp()
                 threeAddr.addCode(f"{new_temp} = {useTemp} {oper} {tokens[0]}")
+                print("Nah it was me")
+                #  todo may not need to return here
                 return f"{new_temp}"
             else:
                 print("yikes")
+                print(tokens)
                 # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
+        # Perform any actions that occur after the operations /, //, *, %
         if len(root.children) > 2:
+            # TODO should i check this here?
+            # if hasTerm:
+            #     print("Term detected")
+            #     threeAddr.addCode(f"{hasTerm} {oper} {new_temp}")
             line = walkExpr1(root.children[2], temp)
             tokens = line.split(" ")
+            print(f"new_temp = {new_temp}")
             if len(tokens) == 1:
                 new_temp = tokens[0]
+            else:
+                print('odsf')
+                get_temp = threeAddr.getLastTemp()
+                new_temp = threeAddr.addTemp()
+                threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
             print("WHAT DID THIS RETURN?")
-            print(new_temp)
+            print(line)
             # return test
         # if len(root.)
-        return f"{oper} {new_temp}"
+        print("the end of the world")
+        return f"{new_temp}"
+        # return f"{oper} {new_temp}"
 
 def walkTerm(root):
     if len(root.children) == 1:
@@ -343,7 +545,12 @@ def walkTerm(root):
             print("running walkFactor and walkTerm1")
             line = f"{walkFactor(root.children[0])} {walkTerm1(root.children[1])}"
             print(line)
-            return line
+            return generateCode(line)
+            # result = generateCode(line)
+            # if result:
+            #     return result
+            # else:
+            #     return line
 
 def walkTerm1(root):
     if len(root.children) == 2:
@@ -352,6 +559,25 @@ def walkTerm1(root):
         line = f"{root.children[0].value.value} {walkFactor(root.children[1])} {walkTerm1(root.children[2])}"
     return line
 
+def generateCode(line):
+    print(f"CHECKING FOR TEMPS IN LINE: {line}")
+    tokens = line.split(" ")
+    if len(tokens) > 2:
+        temp = threeAddr.addTemp()
+        new_temp = temp
+        threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+        i = 3
+        while i < len(tokens) - 1:
+            print(i)
+            new_temp = threeAddr.addTemp()
+            token_oper = tokens[i]
+            i += 1
+            token_value = tokens[i]
+            i += 1
+            print(f"ADDING: {new_temp} = {temp} {token_oper} {token_value}")
+            threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
+            temp = new_temp
+        return new_temp
 
 def walkFactor(root):
     print("whats the factor?")
