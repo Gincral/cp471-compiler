@@ -161,7 +161,7 @@ def walkBool(root, fromIf=False):
 
 # TODO: this can probably return if 2 < t3 instead of creating t4 = 2 < t3 and returning that
 def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
-    print("expr1:")
+    print("bool1:")
     print("where did the term go")
     print(hasTerm)
     threeAddr.printCode()
@@ -173,9 +173,11 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
         temp = ""
         new_temp = ""
         tokens = line.split(" ")
+        print(tokens)
         if len(tokens) == 1:
             # Ensures addition/subtraction is performed from left to right
             if hasTerm:
+                print("yep")
                 temp = threeAddr.addTemp()
                 print("I RETURNED")
                 threeAddr.addCode(f"{temp} = {hasTerm} {compare} {tokens[0]}")
@@ -189,6 +191,12 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
         if len(tokens) > 2:
             print(f"FROMIF BOOL? {fromIf}")
             if fromIf:
+                # if hasTerm:
+                #     print("man what")
+                #     label = threeAddr.addLabel()
+                #     print(tokens)
+                #     threeAddr.addCode(f"if {hasTerm} {tokens[0]} goto {label}")
+                # else:
                 label = threeAddr.addLabel()
                 threeAddr.addCode(f"if {tokens[0]} {tokens[1]} {tokens[2]} goto {label}")
             else:
@@ -315,7 +323,7 @@ def walkEquality1OLD(root):
         return f"{oper} {new_temp}"
 
 def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
-    print("expr1:")
+    print("equality1:")
     print("where did the term go")
     print(hasTerm)
     threeAddr.printCode()

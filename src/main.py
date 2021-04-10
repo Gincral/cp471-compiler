@@ -32,7 +32,7 @@ def main():
         print("=====================")
     
     threeAddr = getThreeAddr()
-    # generator(symbolTable, threeAddr)
+    generator(symbolTable, threeAddr)
 
     input_file.close()
     output_file.close()
