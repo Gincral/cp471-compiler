@@ -1,3 +1,2 @@
-def string str = "hi";
-str = "string";
-print(str);
+def string a = "hi";
+print(a);

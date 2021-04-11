@@ -28,8 +28,11 @@ def main():
         line = input_file.readline()
         print("=====================")
     threeAddr = getThreeAddr()
-    generator(symbolTable, threeAddr)
-    
+    assembly = generator(symbolTable, threeAddr, )
+
+    for line in assembly:
+        output_file.write(line+'\n')
+
     input_file.close()
     output_file.close()
 
