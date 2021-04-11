@@ -21,8 +21,13 @@ class ThreeAddressCode:
         self.labels = 0
         self.temps = 0
         self.expectingLabel = []
+        self.toBackPatch = []
+        self.isCondition = []
 
     def addCode(self, line):
+        print("TEST")
+        print(f"we expect these labels: {self.expectingLabel}")
+        print(f"we received this line: {line}")
         if len(self.expectingLabel) > 0 and not line.startswith("goto"):
             label = ""
             # if line.startswith("if"):
@@ -31,8 +36,26 @@ class ThreeAddressCode:
             #     label = self.expectingLabel.pop()
             label = self.expectingLabel.pop(0)
             self.code.append(f"{label}: {line}")
+            # Handle backpatch for OR condition
+            if len(self.toBackPatch) > 0 and line.startswith("if"):
+                if len(self.isCondition) > 0 and self.isCondition[0] == "||":
+                    print("BACKPATCHING")
+                    index = self.toBackPatch.pop(0)
+                    self.isCondition.pop(0)
+                    print(f"stored line = {self.code[index]}")
+                    self.code[index] = self.code[index].replace("_", self.getLastLabel())
+        elif len(self.toBackPatch) > 0 and line.startswith("goto"):
+            self.code.append(f"    {line}")
+            if len(self.isCondition) > 0 and self.isCondition[0] == "&&":
+                index = self.toBackPatch.pop(0)
+                self.isCondition.pop(0)
+                print(f"stored line = {self.code[index]}")
+                self.code[index] = self.code[index].replace("_", self.getLastLabel())
         else:
             self.code.append(f"    {line}")
+            # if line.endswith("_"):
+            #     print(f"ADDING TO BACKPATCH: {line}")
+            #     self.toBackPatch.append(len(self.code) - 1)
 
     def getCode(self):
         return self.code
@@ -49,12 +72,34 @@ class ThreeAddressCode:
     def expectLabel(self, label):
         self.expectingLabel.append(label)
 
+    def expectBackPatch(self, condition):
+        index = len(self.code) - 1
+        if self.code[index].endswith("_"):
+            print("ADDING TO BACKPATCH")
+            self.toBackPatch.append(len(self.code) - 1)
+            self.isCondition.append(condition)
+        else:
+            raise Exception("invalid backpatch request")
+
     def addTemp(self):
         self.temps += 1
         return f"t{self.temps}"
 
     def getLastTemp(self):
         return f"t{self.temps}"
+
+    def getLastLabel(self):
+        return f"L{self.labels}"
+
+    # If all code has been generated but a label is still expected, remove the extraneous matching goto statement
+    def cleanUpLabels(self):
+        if len(self.expectingLabel) > 0:
+            for i in range(len(self.expectingLabel)):
+                label = self.expectingLabel.pop()
+                for i in range(len(self.code) - 1):
+                    if self.code[i].strip().startswith("goto") and self.code[i].endswith(label):
+                        self.code.pop(i)
+                        
 
 threeAddr = ThreeAddressCode()
 
@@ -128,19 +173,42 @@ def walkIfStmt(root):
     print("walking ifstmt")
     for child in root.children:
         if child.type == "bool":
-            label1 = threeAddr.addLabel()
+            # !WORKS: TODO This only works for some cases
+            # label1 = threeAddr.addLabel()
+            # result = walkBool(child, fromIf=True)
+            # line = ""
+            # print(f"walkIfStmt received {result}")
+            # if result is not None and result is not "":
+            #     line = f"if {result} goto {label1}"
+            # else:
+            #     print("sorry nothing")
+            #     # TODO: what will this break?
+            #     # line = f"if {threeAddr.getLastTemp()} goto {label1}"
+            # threeAddr.addCode(line)
+            # label2 = threeAddr.addLabel()
+            # line = f"goto {label2}"
+            # threeAddr.addCode(line)
+            # threeAddr.expectLabel(label1)
+            # threeAddr.expectLabel(label2)
+            # !END WORKS
+            # !START EXPERIMENTAL
             result = walkBool(child, fromIf=True)
-            line = ""
+            print(f"walkIfStmt received {result}")
             if result is not None and result is not "":
+                label1 = threeAddr.addLabel()
                 line = f"if {result} goto {label1}"
+                threeAddr.addCode(line)
+                label2 = threeAddr.addLabel()
+                line = f"goto {label2}"
+                threeAddr.addCode(line)
+                threeAddr.expectLabel(label1)
+                threeAddr.expectLabel(label2)
+            # Assume the if stmt was already handled
             else:
-                line = f"if {threeAddr.getLastTemp()} goto {label1}"
-            threeAddr.addCode(line)
-            label2 = threeAddr.addLabel()
-            line = f"goto {label2}"
-            threeAddr.addCode(line)
-            threeAddr.expectLabel(label1)
-            threeAddr.expectLabel(label2)
+                print("sorry nothing")
+                # TODO: what will this break?
+                # line = f"if {threeAddr.getLastTemp()} goto {label1}"
+            # !END EXPERIMENTAL
         elif child.type == "stmt":
             walkStmt(child)
 
@@ -165,10 +233,28 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
     print("where did the term go")
     print(hasTerm)
     threeAddr.printCode()
+    print("is there a temp?")
+    print(useTemp)
+    compare = root.children[0].type
+    print("what's the compare?")
+    print(compare)
+    # TODO: This fixes one test case. Does this break others?
+    # TODO labels should be different if it's an && or an ||
+    if hasTerm and fromIf:
+        label = threeAddr.addLabel()
+        threeAddr.addCode(f"if {hasTerm}{threeAddr.getLastTemp()} goto _")
+        if compare == "||":
+            print("EXPECT goto stmt")
+            threeAddr.expectBackPatch(compare)
+            threeAddr.addCode(f"goto {label}")
+        elif compare == "&&":
+            print("EXPECT goto next if")
+            threeAddr.addCode(f"goto _")
+            threeAddr.expectBackPatch(compare)
+        threeAddr.expectLabel(label)
+        hasTerm = None
     if root.children[1].type == "equality":
         print("running walkEquality")
-        compare = root.children[0].type
-        print(f"whats compare? {compare}")
         line = f"{walkEquality(root.children[1])}"
         temp = ""
         new_temp = ""
@@ -197,12 +283,30 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
                 #     print(tokens)
                 #     threeAddr.addCode(f"if {hasTerm} {tokens[0]} goto {label}")
                 # else:
+                if not hasTerm and compare == "&&":
+                    threeAddr.expectBackPatch(compare)
                 label = threeAddr.addLabel()
                 threeAddr.addCode(f"if {tokens[0]} {tokens[1]} {tokens[2]} goto {label}")
+                threeAddr.expectLabel(label)
+                if not hasTerm:
+                    if compare == "||": 
+                        # print("EXPECT goto stmt")
+                        # threeAddr.expectBackPatch(compare)
+                        threeAddr.addCode(f"goto _")
+                        # threeAddr.expectBackPatch(compare)
+                    elif compare == "&&":
+                        print("interesting")
+                        label = threeAddr.addLabel()
+                        print("EXPECT goto next if")
+                        threeAddr.addCode(f"goto {label}")
+                        threeAddr.expectLabel(label)
+                        # threeAddr.expectBackPatch(compare)
+                        # threeAddr.expectBackPatch(compare)
             else:
                 temp = threeAddr.addTemp()
                 new_temp = temp
                 threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
+                threeAddr.expectLabel(label)
             i = 3
             while i < len(tokens) - 1:
                 print(i)
@@ -269,59 +373,6 @@ def walkEquality(root, fromIf=False):
         line = f"{walkRelation(root.children[0], fromIf)} {walkEquality1(root.children[1], fromIf)}"
         return generateCode(line)
 
-def walkEquality1OLD(root):
-    print("walking equality1")
-    if len(root.children) == 2:
-        compare = root.children[0].value.value
-        line = f"{compare} {walkRelation(root.children[1])}"
-        print(line)
-        # return line
-        tokens = line.split(" ")
-        print(tokens)
-        temp = threeAddr.addTemp()
-        new_temp = temp
-        if len(tokens) > 2:
-            print("creating temps for equality1")
-            # print(tokens)
-            threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
-            i = 3
-            while i < len(tokens) - 1:
-                print(i)
-                new_temp = threeAddr.addTemp()
-                token_oper = tokens[i]
-                i += 1
-                token_value = tokens[i]
-                i += 1
-                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
-                temp = new_temp
-        else:
-            threeAddr.addCode(f"{temp} = {tokens[0]}")
-    else:
-        compare = root.children[0].value.value
-        line = f"{compare} {walkRelation(root.children[1])}"
-        print(line)
-        # return line
-        tokens = line.split(" ")
-        print(tokens)
-        temp = threeAddr.addTemp()
-        new_temp = temp
-        if len(tokens) > 2:
-            print("creating temps for equality1")
-            # print(tokens)
-            threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
-            i = 3
-            while i < len(tokens) - 1:
-                print(i)
-                new_temp = threeAddr.addTemp()
-                token_oper = tokens[i]
-                i += 1
-                token_value = tokens[i]
-                i += 1
-                threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
-                temp = new_temp
-        threeAddr.printCode()
-        return f"{oper} {new_temp}"
-
 def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
     print("equality1:")
     print("where did the term go")
@@ -354,6 +405,7 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
             if fromIf:
                 label = threeAddr.addLabel()
                 threeAddr.addCode(f"if {tokens[0]} {tokens[1]} {tokens[2]} goto {label}")
+                threeAddr.expectLabel()
             else:
                 temp = threeAddr.addTemp()
                 new_temp = temp
@@ -387,7 +439,6 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
                 print("yikes")
                 print(tokens)
                 # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
-        # Perform any actions that occur after the operations /, //, *, %
         if len(root.children) > 2:
             # TODO should i check this here?
             # if hasTerm:
@@ -404,8 +455,6 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
                 threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
             print("WHAT DID THIS RETURN?")
             print(line)
-            # return test
-        # if len(root.)
         print("the end of the world")
         return f"{new_temp}"
         # return f"{oper} {new_temp}"
@@ -452,10 +501,6 @@ def walkExpr(root):
             # line = f"{walkTerm(root.children[0])} {walkExpr1(root.children[1])}"
             print(f"walkExpr received: {line}")
             return line
-            # tokens = line.split(" ")
-            # temp = threeAddr.addTemp()
-            # threeAddr.addCode(f"{temp} = {line}")
-            # return temp
     
 def walkExpr1(root, useTemp=None, hasTerm=None):
     print("expr1:")
@@ -602,4 +647,6 @@ def inter(symbolTable, tree):
 
 
 def getThreeAddr():
+    threeAddr.cleanUpLabels()
+    threeAddr.printCode()
     return threeAddr.getCode()

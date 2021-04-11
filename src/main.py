@@ -30,9 +30,8 @@ def main():
         line = input_file.readline()
             # line = input_file.readline()
         print("=====================")
-    
     threeAddr = getThreeAddr()
-    generator(symbolTable, threeAddr)
+    # generator(symbolTable, threeAddr)
 
     input_file.close()
     output_file.close()
