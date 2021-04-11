@@ -93,6 +93,7 @@ def ifstmt(root, symbolTable):
 def println(root):
     print("Grammar println")
     tokenList = root.value
+    if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     le = len(tokenList)
     if tokenList[1].value == '(' and tokenList[le-1].value == ')':
         boolN = Node(tokenList[2:le-1], "bool")
@@ -171,7 +172,7 @@ def bool1(root):
     root.children.append(Node(tokenList[0], tokenList[0].value))
     tokenList = tokenList[1:]
     for i in range(len(tokenList)):
-        if tokenList[i].value == '||' or tokenList[i].value == '&&':
+        if tokenList[i].value == '||' or tokenList[i].value == '&&' or tokenList[i].value == "and" or tokenList[i].value == "or":
             equalityN = Node(tokenList[:i], "equality")
             bool1N =  Node(tokenList[i:], "bool1")
             root.children.append(equalityN)
