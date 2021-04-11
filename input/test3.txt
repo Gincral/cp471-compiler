@@ -1,0 +1,3 @@
+def result = TRUE || FALSE && TRUE;
+result = FALSE && TRUE;
+print(result);

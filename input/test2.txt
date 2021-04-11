@@ -1,0 +1,3 @@
+def number str = "hi;
+str = "string";
+print(str);

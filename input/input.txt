@@ -1,1 +1,22 @@
-if (3 * 2 < 5 + 6 * 3 - 8): { def number y = 0; } else:{ def number z = 0; }
+def number num = 3;
+num = "string";
+
+if (TRUE || FALSE && TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
+
+print("hi");
+
+def result = TRUE || FALSE && TRUE;
+result = TRUE || 1 && TRUE;
+
+
+if (1 < 2): { if(4 > 3): { print("1") } else:{ print("2") } } else: { print("3")}
+
+if (1 < 2):
+ run if (4 > 3)
+ else run print("3")
+if (4 > 3):
+ run print("1")
+ else run print("2")
+
+if (2 < 5+6*3+5):{ def number y = 0; } else:{ z = 0; }
+if (2 < 5 + 6 * 3 - 5): { def number y = 0; } else:{ def number z = 0; }
