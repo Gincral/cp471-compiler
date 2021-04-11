@@ -9,6 +9,8 @@ def number s = 1 * 5 + 6;
 
 def boolean result = TRUE || FALSE && TRUE;
 
+if (2 < 5 + 6 * 3 - 8): { print("1"); } else:{ print("2"); }
+
 def number x = 3;
 def number a = 4;
 def number b = 5;
@@ -16,3 +18,9 @@ def number c = 6;
 def number d = 7;
 def number e = 8;
 if (x < a+b || x > c && x<=d):{ def number y = 0; } else:{ if (x>=e):{ def number z = 0; } }
+!! the x < a+b case isn't being returned yet :(
+
+def number a = 100 + 2*10 // 11 % 3;
+def number b = 5 + 302 * 2 + 6 // 2 + 4;
+if (a < b):{ print("a < b") }
+!! calculating b is kind of messed up sadly

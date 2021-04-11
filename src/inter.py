@@ -173,27 +173,9 @@ def walkIfStmt(root):
     print("walking ifstmt")
     for child in root.children:
         if child.type == "bool":
-            # !WORKS: TODO This only works for some cases
-            # label1 = threeAddr.addLabel()
-            # result = walkBool(child, fromIf=True)
-            # line = ""
-            # print(f"walkIfStmt received {result}")
-            # if result is not None and result is not "":
-            #     line = f"if {result} goto {label1}"
-            # else:
-            #     print("sorry nothing")
-            #     # TODO: what will this break?
-            #     # line = f"if {threeAddr.getLastTemp()} goto {label1}"
-            # threeAddr.addCode(line)
-            # label2 = threeAddr.addLabel()
-            # line = f"goto {label2}"
-            # threeAddr.addCode(line)
-            # threeAddr.expectLabel(label1)
-            # threeAddr.expectLabel(label2)
-            # !END WORKS
-            # !START EXPERIMENTAL
             result = walkBool(child, fromIf=True)
             print(f"walkIfStmt received {result}")
+            # If this is false assume the if stmt was already handled
             if result is not None and result is not "":
                 label1 = threeAddr.addLabel()
                 line = f"if {result} goto {label1}"
@@ -203,12 +185,6 @@ def walkIfStmt(root):
                 threeAddr.addCode(line)
                 threeAddr.expectLabel(label1)
                 threeAddr.expectLabel(label2)
-            # Assume the if stmt was already handled
-            else:
-                print("sorry nothing")
-                # TODO: what will this break?
-                # line = f"if {threeAddr.getLastTemp()} goto {label1}"
-            # !END EXPERIMENTAL
         elif child.type == "stmt":
             walkStmt(child)
 
@@ -277,12 +253,6 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
         if len(tokens) > 2:
             print(f"FROMIF BOOL? {fromIf}")
             if fromIf:
-                # if hasTerm:
-                #     print("man what")
-                #     label = threeAddr.addLabel()
-                #     print(tokens)
-                #     threeAddr.addCode(f"if {hasTerm} {tokens[0]} goto {label}")
-                # else:
                 if not hasTerm and compare == "&&":
                     threeAddr.expectBackPatch(compare)
                 label = threeAddr.addLabel()
@@ -290,12 +260,11 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
                 threeAddr.expectLabel(label)
                 if not hasTerm:
                     if compare == "||": 
-                        # print("EXPECT goto stmt")
+                        print("EXPECT goto stmt")
                         # threeAddr.expectBackPatch(compare)
                         threeAddr.addCode(f"goto _")
                         # threeAddr.expectBackPatch(compare)
                     elif compare == "&&":
-                        print("interesting")
                         label = threeAddr.addLabel()
                         print("EXPECT goto next if")
                         threeAddr.addCode(f"goto {label}")
@@ -319,8 +288,8 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
                 threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
                 temp = new_temp
         # TODO do i need??
-        # elif len(tokens) > 1:
-        #     print("im lost")
+        elif len(tokens) > 1:
+            print("figure out why this is being ran")
         #     print(tokens[0])
         #     print(tokens[1])
         #     threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
@@ -333,9 +302,9 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
                 #  todo may not need to return here
                 return f"{new_temp}"
             else:
-                print("yikes")
+                # TODO what do we do here?
+                print("yikes figure out if you need this")
                 print(tokens)
-                # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
         # Recursively run the rest of the bool1s
         if len(root.children) > 2:
             # TODO should i check this here?
@@ -348,15 +317,12 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
             if len(tokens) == 1:
                 new_temp = tokens[0]
             else:
-                print('odsf')
                 get_temp = threeAddr.getLastTemp()
                 new_temp = threeAddr.addTemp()
-                print("ok culprit here")
                 print(f"{new_temp} = {get_temp} {line}")
                 threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
             print("WHAT DID THIS RETURN?")
             print(line)
-            # return test
         print("the end of the world")
         return f"{new_temp}"
         # return f"{oper} {new_temp}"
@@ -383,7 +349,6 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
         equal = root.children[0].type
         print(f"whats compare? {equal}")
         line = f"{walkRelation(root.children[1], fromIf)}"
-        # print(line)
         temp = ""
         new_temp = ""
         tokens = line.split(" ")
@@ -396,7 +361,6 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
             else:
                 print("NO, I RETURNED!")
                 return f"{equal} {tokens[0]}"
-        # print(tokens)
         print("what's the line that got returned?")
         print(line)
         # If a long line is returned, generate a bunch of temp variables
@@ -422,8 +386,8 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
                 threeAddr.addCode(f"{new_temp} = {temp} {token_oper} {token_value}")
                 temp = new_temp
         # TODO do i need??
-        # elif len(tokens) > 1:
-        #     print("im lost")
+        elif len(tokens) > 1:
+            print("equality: is this needed?")
         #     print(tokens[0])
         #     print(tokens[1])
         #     threeAddr.addCode(f"{new_temp} = {useTemp} {tokens[0]} {tokens[1]}")
@@ -436,14 +400,10 @@ def walkEquality1(root, useTemp=None, hasTerm=None, fromIf=False):
                 #  todo may not need to return here
                 return f"{new_temp}"
             else:
-                print("yikes")
+                print("yikes, do we need? or is this not possible?")
                 print(tokens)
                 # threeAddr.addCode(f"{new_temp} = {tokens[0]}")
         if len(root.children) > 2:
-            # TODO should i check this here?
-            # if hasTerm:
-            #     print("Term detected")
-            #     threeAddr.addCode(f"{hasTerm} {oper} {new_temp}")
             line = walkEquality1(root.children[2], temp)
             tokens = line.split(" ")
             print(f"new_temp = {new_temp}")
@@ -493,12 +453,10 @@ def walkExpr(root):
             return walkTerm(root)
     else:
         if root.children[0].type == "term" and root.children[1].type == "expr'":
-            # print("running walkTerm and walkExpr1")
+            print("running walkTerm and walkExpr1")
             term = walkTerm(root.children[0])
             print(f"RECEIVED TERM: {term}")
             line = walkExpr1(root.children[1], hasTerm=term)
-            # # THIS WORKS kinda but still results in bad order
-            # line = f"{walkTerm(root.children[0])} {walkExpr1(root.children[1])}"
             print(f"walkExpr received: {line}")
             return line
     
@@ -512,7 +470,6 @@ def walkExpr1(root, useTemp=None, hasTerm=None):
         oper = root.children[0].type
         print(f"whats oper? {oper}")
         line = f"{walkTerm(root.children[1])}"
-        # print(line)
         temp = ""
         new_temp = ""
         tokens = line.split(" ")
@@ -537,7 +494,6 @@ def walkExpr1(root, useTemp=None, hasTerm=None):
             threeAddr.addCode(f"{temp} = {tokens[0]} {tokens[1]} {tokens[2]}")
             i = 3
             while i < len(tokens) - 1:
-                print(i)
                 new_temp = threeAddr.addTemp()
                 token_oper = tokens[i]
                 i += 1
@@ -581,9 +537,6 @@ def walkExpr1(root, useTemp=None, hasTerm=None):
                 threeAddr.addCode(f"{new_temp} = {get_temp} {line}")
             print("WHAT DID THIS RETURN?")
             print(line)
-            # return test
-        # if len(root.)
-        print("the end of the world")
         return f"{new_temp}"
         # return f"{oper} {new_temp}"
 
@@ -599,11 +552,6 @@ def walkTerm(root):
             line = f"{walkFactor(root.children[0])} {walkTerm1(root.children[1])}"
             print(line)
             return generateCode(line)
-            # result = generateCode(line)
-            # if result:
-            #     return result
-            # else:
-            #     return line
 
 def walkTerm1(root):
     if len(root.children) == 2:
@@ -637,14 +585,7 @@ def walkFactor(root):
     return root.value[0].value
 
 def inter(symbolTable, tree):
-    inter = []
     walkTree(tree)
-    three_address_split = []
-    for line in threeAddr.getCode():
-        three_address_split.append(line.split(" "))
-    # printIntermediate(three_address)
-    # print("===============")
-
 
 def getThreeAddr():
     threeAddr.cleanUpLabels()

@@ -1,0 +1,47 @@
+! if (1 < 2): { if(4 > 3): { print("1") } else:{ print("2") } } else: { print("3")}
+- the structure is better but I'm having issues getting the labels to be exactly right
+- they're partially right  but not completely right
+
+! def number num = 3;
+num = "string";
+- make sure it doesn't try to reassign this
+
+! def number r = 3 * 2;
+ def number s = r * 5;
+- PARSER should realize that r is actually in the symbol table
+
+! if (TRUE || FALSE && TRUE): { if(TRUE): { print("1") } else:{ print("2") } } else: { print("3")}
+- should this be comparing with t2 or with (t1 && TRUE)?
+
+Works!
+
+def number a = 100 + 2*10 // 11 % 3; - perfect
+
+def number s = 1 * 5 + 6; - got it working hooray
+
+t1 = 1*5
+t2 = t1 + 6
+s = t2
+
+if (2 < 5 + 6 * 3 - 8): { def number y = 0; } else:{ def number z = 0; }
+if (3 * 2 < 5 + 6 * 3 - 8): { def number y = 0; } else:{ def number z = 0; }
+
+Expected:
+# t1 = 2*10
+# t2 = t1 / 11
+# t3 = t2 % 3
+# t4 = 100 + t3
+# a = t4
+
+def number a = 100 + 2;
+a = 5 + 3;              - aside from the order (as mentioned above) it works!
+
+def boolean result = TRUE || FALSE && TRUE; - all good
+
+def number x = 3;
+def number a = 4;
+def number b = 5;
+def number c = 6;
+def number d = 7;
+def number e = 8;
+if (x < a+b || x > c && x<=d):{ def number y = 0; } else:{ if (x>=e):{ def number z = 0; } } - finally works but im sure others dont haha
