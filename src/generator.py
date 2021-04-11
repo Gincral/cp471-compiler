@@ -63,6 +63,14 @@ def interToAssembly(symbolTable, descriptors, three_address):
             assembly_line = getLineStart(descriptors)
             assembly_line = assembly_line + f"ST R{registers[0]}, R{registers[1]}"
             assembly.append(assembly_line)
+        elif isCombine(line):
+            print("comb")
+            # Get registers and perform requested operation
+            registers = getRegisters(descriptors, line, assembly)
+            operation = getCombine(line)
+            assembly_line = getLineStart(descriptors)
+            assembly_line = assembly_line + f"{operation} R{registers[0]}, R{registers[1]}, R{registers[2]}"
+            assembly.append(assembly_line)
         elif isOperation(line):
             print("oper")
             # Get registers and perform requested operation
@@ -152,6 +160,9 @@ def isGoto(line):
 def isPrint(line):
     return line[0] == "call"
 
+def isCombine(line):
+    return len(line) == 5 and line[3] in ['or', 'and', '||', '&&']
+
 # Returns the assembly operation for the provided operation symbol e.g. given "+", return "ADD"
 def getOperation(line):
     operations = {
@@ -174,3 +185,12 @@ def getCompare(line):
         "!=": "BNEZ",
     }
     return comparisons[line[2]]
+
+def getCombine(line):
+    combine = {
+        "||": "OR",
+        "or": "OR",
+        "&&": "AND",
+        "and": "AND",
+    }
+    return combine[line[3]]
