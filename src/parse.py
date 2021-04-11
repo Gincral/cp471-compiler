@@ -1,5 +1,6 @@
 from symbol import Data
 
+
 class Node:
     def __init__(self, value, type=None):
         self.value = value
@@ -7,19 +8,21 @@ class Node:
         self.children = []
 
 def parse(symbolTable, tokenList):
+    global SymbolTable
+    SymbolTable = symbolTable
     if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     stmtN = Node(tokenList, "stmt")
-    if (stmt(stmtN, symbolTable)):
+    if (stmt(stmtN)):
         return stmtN
     
 
-def stmt(root, symbolTable):
+def stmt(root):
     print("Grammar stmt")
     tokenList = root.value
     if tokenList[0].type == 'id':
         assignN = Node(tokenList, "assign")
         root.children.append(assignN)
-        return assign(assignN, symbolTable)
+        return assign(assignN)
     else:
         if tokenList[0].value == 'if':
             le = len(tokenList)
@@ -40,7 +43,7 @@ def stmt(root, symbolTable):
                             stmtN = Node(tokenList[i+4:le-1], "stmt")
                             root.children.append(stmtN)
                             root.children.append(Node(tokenList[le-1]))
-                            return ifstmt(ifstmtN, symbolTable) and stmt(stmtN, symbolTable)
+                            return ifstmt(ifstmtN) and stmt(stmtN)
                         else:
                             print("wrong grammar: stmt")
                             return False
@@ -48,7 +51,7 @@ def stmt(root, symbolTable):
             if count == 0:
                 ifstmtN = Node(tokenList, "ifstmt")
                 root.children.append(ifstmtN)
-                return ifstmt(ifstmtN, symbolTable)
+                return ifstmt(ifstmtN)
             else:
                 print("wrong grammar: stmt, bracket number invalid")
                 return False
@@ -59,12 +62,12 @@ def stmt(root, symbolTable):
         elif tokenList[0].value == 'def':
             decN = Node(tokenList, "dec")
             root.children.append(decN)
-            return dec(decN, symbolTable)
+            return dec(decN)
         else:
             print("wrong grammar: stmt")
             return False
         
-def ifstmt(root, symbolTable):
+def ifstmt(root):
     print("Grammar ifstmt")
     tokenList = root.value
     le = len(tokenList)
@@ -82,7 +85,7 @@ def ifstmt(root, symbolTable):
         stmtN = Node(tokenList[i+3:le-1], "stmt")
         root.children.append(stmtN)
         root.children.append(Node(tokenList[le-1]))
-        if bool(boolN) == 'boolean': return stmt(stmtN,symbolTable)
+        if bool(boolN) == 'boolean': return stmt(stmtN)
         else: 
             print("ifstmt error, condition should be boolean")
             return False
@@ -106,13 +109,13 @@ def println(root):
         print("wrong grammar: println")
         return False
 
-def dec(root, symbolTable):
+def dec(root):
     print("Grammar dec")
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].type == 'lex' and tokenList[1].value in ['string', 'boolean', 'number'] and tokenList[2].type == 'id' and tokenList[3].value == '=':
         data = Data(tokenList[2].value, tokenList[1].value, True)
-        symbolTable.appendData(data)
+        SymbolTable.appendData(data)
         root.children.append(Node(tokenList[0], "def"))
         root.children.append(Node(tokenList[1], "type"))
         root.children.append(Node(tokenList[2], "id"))
@@ -127,7 +130,7 @@ def dec(root, symbolTable):
         print("wrong grammar: dec")
         return False
 
-def assign(root, symbolTable): 
+def assign(root): 
     print("Grammar assign")
     tokenList = root.value
     if tokenList[1].value == '=':
@@ -135,7 +138,7 @@ def assign(root, symbolTable):
         root.children.append(Node(tokenList[0], "id"))
         root.children.append(Node(tokenList[1], "="))
         root.children.append(boolN)
-        data = symbolTable.searchData(tokenList[0].value)
+        data = SymbolTable.searchData(tokenList[0].value)
         if data and data.type == bool(boolN): return True
         elif not data:
             print('Assign error: variable didnt get assign')
@@ -353,6 +356,9 @@ def factor(root):
     print(tokenList[0].value, tokenList[0].type)
     if len(tokenList) == 1 or (len(tokenList) == 2 and tokenList[1].value == ";"): 
         root.children.append(Node(tokenList[0], "value"))
+        if tokenList[0].type == "id":
+            data = SymbolTable.searchData(tokenList[0].value)
+            return data.type
         return tokenList[0].type
     else:
         print("len of token list should be 1")

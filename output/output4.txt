@@ -1,0 +1,19 @@
+    LD R0, num
+    LD R1, 0
+    ST R0, R1
+    LD R2, a
+    LD R3, 7
+    ST R2, R3
+    LD R4, t1
+    LD R5, 8
+    MUL R4, R2, R5
+    LD R6, t2
+    LD R7, 5
+    DIV R6, R4, R7
+    LD R8, t3
+    LD R9, 3
+    MOD R8, R6, R9
+    LD R10, t4
+    LD R11, 4
+    ADD R10, R11, R8
+    ST R0, R10
