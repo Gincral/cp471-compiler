@@ -52,8 +52,6 @@ def generator(symbolTable, threeAddr):
 
 def interToAssembly(symbolTable, descriptors, three_address):
     assembly = []
-    print("converting...")
-    print(three_address)
     for line in three_address:
         if hasLabel(line):
             descriptors.saveLabel(line[0])
