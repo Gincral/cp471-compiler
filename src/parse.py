@@ -21,8 +21,6 @@ def stmt(root, symbolTable):
         root.children.append(assignN)
         return assign(assignN, symbolTable)
     else:
-        print("we are in stmt")
-        print(tokenList[0].value)
         if tokenList[0].value == 'if':
             le = len(tokenList)
             count = 0
@@ -352,7 +350,6 @@ def factor(root):
     print("Grammar factor")
     tokenList = root.value #len of token list should be 1
     print(tokenList[0].value, tokenList[0].type)
-    # TODO
     if len(tokenList) == 1 or (len(tokenList) == 2 and tokenList[1].value == ";"): 
         root.children.append(Node(tokenList[0], "value"))
         return tokenList[0].type
