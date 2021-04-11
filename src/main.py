@@ -1,9 +1,11 @@
 from os import error
 import sys
 from lexer import lexer
+from symbol import SymbolTable
 from symbol import SymbolTable, Data
-from parser import parser
-
+from parse import parse
+from inter import inter, getThreeAddr
+from generator import generator
 
 
 def main():
@@ -21,12 +23,14 @@ def main():
     while line:
         while line.replace(" ", "") == "\n": line = input_file.readline()
         tokenList = lexer(line.strip())
-        if not (tokenList): print("lexer Error")
-        par = parser(symbolTable, tokenList)
-        if not (par): print("parser Error")
+        if not (tokenList): raise Exception("lexer Error")
+        par = parse(symbolTable, tokenList)
+        if not (par): raise Exception("parser Error")
+        inter(symbolTable, par)
         line = input_file.readline()
-            # line = input_file.readline()
         print("=====================")
+    threeAddr = getThreeAddr()
+    generator(symbolTable, threeAddr)
 
     input_file.close()
     output_file.close()
