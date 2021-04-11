@@ -1,4 +1,4 @@
     LD R0, a
-    LD R1, "3"
+    LD R1, "hi"
     ST R0, R1
     CALL print, a

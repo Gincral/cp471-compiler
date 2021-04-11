@@ -34,10 +34,10 @@ class Descriptors:
 # START three-address code to assembly
 def generator(symbolTable, threeAddr):
     # Test code:
-    threeAddr = [
-        "a = \"3\"",
-        "call print, a"
-    ]
+    # threeAddr = [
+    #     "a = \"3\"",
+    #     "call print, a"
+    # ]
     three_address_split = []
     for line in threeAddr:
         three_address_split.append(line.strip().split(" "))
