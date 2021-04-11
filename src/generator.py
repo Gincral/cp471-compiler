@@ -83,15 +83,24 @@ def interToAssembly(symbolTable, descriptors, three_address):
             print("if")
             # Get registers and perform subtraction
             registers = getRegisters(descriptors, line, assembly)
-            compare = getCompare(line)
-            assembly_line = getLineStart(descriptors)
-            assembly_line = assembly_line + f"SUB R{registers[0]}, R{registers[0]}, R{registers[1]}"
-            assembly.append(assembly_line)
-            # Goto branch if condition is satisfied
-            assembly_line = getLineStart(descriptors)
-            assembly_line = assembly_line + f"{compare} R{registers[0]}, {line[-1]}"
-            assembly.append(assembly_line)
-            # print(line)
+            # Boolean case in if condition e.g. TRUE, FALSE
+            if (isBoolean(line)):
+                # Is TRUE or not
+                boolean = "ISTR"
+                assembly_line = getLineStart(descriptors)
+                assembly_line = assembly_line + f"{boolean} R{registers[0]}, {line[-1]}"
+                assembly.append(assembly_line)
+            else:
+                # Compare case in if condition e.g. 3 < 5
+                compare = getCompare(line)
+                assembly_line = getLineStart(descriptors)
+                assembly_line = assembly_line + f"SUB R{registers[0]}, R{registers[0]}, R{registers[1]}"
+                assembly.append(assembly_line)
+                # Goto branch if condition is satisfied
+                assembly_line = getLineStart(descriptors)
+                assembly_line = assembly_line + f"{compare} R{registers[0]}, {line[-1]}"
+                assembly.append(assembly_line)
+                # print(line)
         elif isGoto(line):
             print("goto")
             assembly_line = getLineStart(descriptors)
@@ -162,6 +171,9 @@ def isPrint(line):
 
 def isCombine(line):
     return len(line) == 5 and line[3] in ['or', 'and', '||', '&&']
+
+def isBoolean(line):
+    return line[1] == "TRUE" or line[1] == "FALSE"
 
 # Returns the assembly operation for the provided operation symbol e.g. given "+", return "ADD"
 def getOperation(line):

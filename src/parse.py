@@ -10,7 +10,16 @@ class Node:
 def parse(symbolTable, tokenList):
     global SymbolTable
     SymbolTable = symbolTable
-    if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
+
+    # Delete end of line symbol e.g. ";"
+    # In some condition the position of ";" is not at the end, e.g. if(boolean): {print("a");} 
+    index = 0
+    while index < len(tokenList):
+        if (tokenList[index].value == ";"):
+            tokenList.pop(index)
+        else:
+            index+=1
+
     stmtN = Node(tokenList, "stmt")
     if (stmt(stmtN)):
         return stmtN
@@ -96,7 +105,6 @@ def ifstmt(root):
 def println(root):
     print("Grammar println")
     tokenList = root.value
-    if (tokenList[len(tokenList)-1].value == ';'): tokenList = tokenList[:len(tokenList)-1]
     le = len(tokenList)
     if tokenList[1].value == '(' and tokenList[le-1].value == ')':
         boolN = Node(tokenList[2:le-1], "bool")
