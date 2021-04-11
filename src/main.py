@@ -11,8 +11,6 @@ from generator import generator
 def main():
     input_file_address= sys.argv[1]
     output_file_address= sys.argv[2]
-    input_file_address = "input/input.txt"
-    output_file_address = "output/result.txt"
 
     input_file = open(input_file_address, "r")
     output_file = open(output_file_address, "w")
@@ -28,17 +26,12 @@ def main():
         if not (par): raise Exception("parser Error")
         inter(symbolTable, par)
         line = input_file.readline()
+        threeAddr = getThreeAddr()
+        generator(symbolTable, threeAddr)
         print("=====================")
-    threeAddr = getThreeAddr()
-    generator(symbolTable, threeAddr)
-
+    
     input_file.close()
     output_file.close()
-
-	
-	# symbol = new symbol()
-	# parser = new parser(lex, symbol, input_file_address, output_file_address)
-	# parser.start()
 
 
 if __name__ == "__main__":
