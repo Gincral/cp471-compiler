@@ -26,9 +26,9 @@ def main():
         if not (par): raise Exception("parser Error")
         inter(symbolTable, par)
         line = input_file.readline()
-        threeAddr = getThreeAddr()
-        generator(symbolTable, threeAddr)
         print("=====================")
+    threeAddr = getThreeAddr()
+    generator(symbolTable, threeAddr)
     
     input_file.close()
     output_file.close()
