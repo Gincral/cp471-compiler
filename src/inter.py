@@ -149,8 +149,13 @@ def walkAssign(root):
     root = root.children[-1]
     if root.type == "bool":
         print("walking bool")
-        line = f"{toAssign.value.value} = {walkBool(root)}"
-        threeAddr.addCode(line)
+        returnValue = walkBool(root)
+        if returnValue is None or returnValue is "":
+            line = f"{toAssign.value.value} = {threeAddr.getLastTemp()}"
+            threeAddr.addCode(line)
+        else:
+            line = f"{toAssign.value.value} = {walkBool(root)}"
+            threeAddr.addCode(line)
 
 def walkIfStmt(root):
     print("walking ifstmt")
@@ -278,6 +283,8 @@ def walkBool1(root, useTemp=None, hasTerm=None, fromIf=False):
                 new_temp = threeAddr.addTemp()
                 threeAddr.addCode(f"{new_temp} = {useTemp} {compare} {tokens[0]}")
             else:
+                print("is there a term?")
+                print(hasTerm)
                 print("this does nothing right now!")
         # Recursively run the rest of the bool1s
         if len(root.children) > 2:

@@ -47,17 +47,18 @@ class TestStringMethods(unittest.TestCase):
         threeAddr = getThreeAddr()
         self.assertEqual(threeAddr, ['    t1 = 6 * 3', '    t2 = 5 + t1', '    t3 = t2 - 8', '    if 2 < t3 goto L1', '    goto L2', 'L1: y = 0', 'L2: z = 0'])
 
+    # test1.txt
     def test4(self):
         clearCode()
         symbolTable = SymbolTable()
-        line = "if (3 * 2 < 5 + 6 * 3 - 8): { def number y = 0; } else:{ def number z = 0; }"
+        line = "if (3 * 2 <= 5 + 6 * 3 - 8): { def number y = 0; } else:{ def number z = 0; }"
         tokenList = lexer(line.strip())
         if not (tokenList): raise Exception("lexer Error")
         par = parse(symbolTable, tokenList)
         if not (par): raise Exception("parser Error")
         inter(symbolTable, par)
         threeAddr = getThreeAddr()
-        self.assertEqual(threeAddr, ['    t1 = 3 * 2', '    t2 = 6 * 3', '    t3 = 5 + t2', '    t4 = t3 - 8', '    if t1 < t4 goto L1', '    goto L2', 'L1: y = 0', 'L2: z = 0'])
+        self.assertEqual(threeAddr, ['    t1 = 3 * 2', '    t2 = 6 * 3', '    t3 = 5 + t2', '    t4 = t3 - 8', '    if t1 <= t4 goto L1', '    goto L2', 'L1: y = 0', 'L2: z = 0'])
 
     # Test Case 3
     def test5(self):
@@ -96,6 +97,25 @@ class TestStringMethods(unittest.TestCase):
         threeAddr = getThreeAddr()
         print(threeAddr)
         self.assertEqual(threeAddr, ['    t1 = TRUE || FALSE', '    t2 = t1 && TRUE', '    result = t2'])
+
+    # test3.txt
+    def test8(self):
+        clearCode()
+        symbolTable = SymbolTable()
+        lines = [
+            "def boolean result = TRUE || FALSE && TRUE;",
+            "result = FALSE && TRUE;",
+            "print(result);"
+        ]
+        for line in lines:
+            tokenList = lexer(line.strip())
+            if not (tokenList): raise Exception("lexer Error")
+            par = parse(symbolTable, tokenList)
+            if not (par): raise Exception("parser Error")
+            inter(symbolTable, par)
+            threeAddr = getThreeAddr()
+        print(threeAddr)
+        self.assertEqual(threeAddr, ['    t1 = TRUE || FALSE', '    t2 = t1 && TRUE', '    result = t2', '    t3 = FALSE && TRUE', '    result = t3', '    call print, result'])
 
 if __name__ == '__main__':
     unittest.main()
