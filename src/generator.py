@@ -34,13 +34,10 @@ class Descriptors:
 # START three-address code to assembly
 def generator(symbolTable, threeAddr):
     # Test code:
-    # threeAddr = [
-    #     "t1 = 2*10",
-    #     "t2 = t1 / 11",
-    #     "t3 = t2 % 3",
-    #     "t4 = 100 + t3",
-    #     "a = t4"
-    # ]
+    threeAddr = [
+        "a = \"3\"",
+        "call print, a"
+    ]
     three_address_split = []
     for line in threeAddr:
         three_address_split.append(line.strip().split(" "))
@@ -49,20 +46,25 @@ def generator(symbolTable, threeAddr):
     descriptors = Descriptors()
     assembly = interToAssembly(symbolTable, descriptors, three_address_split)
     printAssembly(assembly)
+    return assembly
 
 def interToAssembly(symbolTable, descriptors, three_address):
     assembly = []
     for line in three_address:
+        print(line)
         if hasLabel(line):
+            print("label")
             descriptors.saveLabel(line[0])
             line = line[1:]
         if isCopy(line):
+            print("copy")
             # Get registers and load result
             registers = getRegisters(descriptors, line, assembly)
             assembly_line = getLineStart(descriptors)
             assembly_line = assembly_line + f"ST R{registers[0]}, R{registers[1]}"
             assembly.append(assembly_line)
         elif isOperation(line):
+            print("oper")
             # Get registers and perform requested operation
             registers = getRegisters(descriptors, line, assembly)
             operation = getOperation(line)
@@ -70,6 +72,7 @@ def interToAssembly(symbolTable, descriptors, three_address):
             assembly_line = assembly_line + f"{operation} R{registers[0]}, R{registers[1]}, R{registers[2]}"
             assembly.append(assembly_line)
         elif isIfConditional(line):
+            print("if")
             # Get registers and perform subtraction
             registers = getRegisters(descriptors, line, assembly)
             compare = getCompare(line)
@@ -82,11 +85,13 @@ def interToAssembly(symbolTable, descriptors, three_address):
             assembly.append(assembly_line)
             # print(line)
         elif isGoto(line):
+            print("goto")
             assembly_line = getLineStart(descriptors)
             # TODO what is the exact label for a nonconditional branch?
             assembly_line = assembly_line + f"B {line[-1]}"
             assembly.append(assembly_line)
         elif isPrint(line):
+            print("print")
             assembly_line = getLineStart(descriptors)
             # TODO how do we actually print? :S
             assembly_line = assembly_line + f"CALL print, {line[-1]}"
@@ -106,12 +111,13 @@ def getRegisters(descriptors, line, assembly):
     keywords = ["if", "goto"]
     registers = []
     for token in line:
-        if token not in keywords and token.isalnum():
+        if token not in keywords and (token.isalnum()or (len(token)>=2 and token[0]=='"' and token[len(token)-1]=='"')):
             register_index = descriptors.getRegisterWithValue(token)
             if register_index == -1:
                 assembly_line = getLineStart(descriptors)
                 register_index = descriptors.insertIntoRegister(register_index, token)
                 assembly_line = assembly_line + f"LD R{register_index}, {token}"
+                # print(assembly_line)
                 assembly.append(assembly_line)
             registers.append(register_index)
         elif token == "goto":
@@ -135,7 +141,7 @@ def isOperation(line):
 
 # Returns true if the three-address code given copies e.g. x = y
 def isCopy(line):
-    return len(line) == 3 and line[0].isalnum() and line[1] == "=" and line[2].isalnum()
+    return len(line) == 3 and line[0].isalnum() and line[1] == "=" 
 
 def isIfConditional(line):
     return line[0] == "if"
