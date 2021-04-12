@@ -1,0 +1,11 @@
+    LD R0, t1
+    LD R1, 5
+    LD R2, 1
+    SUB R0, R1, R2
+    LD R3, 4
+    SUB R0, R0, R3
+    BEQZ R0, L2
+    B L1
+L1: LD R4, FALSE
+    ISTR R4, L2
+L2: CALL print, "haha"

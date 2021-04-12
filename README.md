@@ -1,5 +1,11 @@
 # cp471-compiler
 
+# Download from GitHub
+git clone https://github.com/HelloElijah/TagBased-Recommender-System.git
+
+# Usage in terminal
+python src/main.py input/test1.txt output/result.txt
+
 When submitting the final project and presentation,  you  must document the contribution (in percentage) made by each team member in the project.
  
 Target Assembly Code Generation Submission (Implemented version and proof of execution)

@@ -113,7 +113,8 @@ def interToAssembly(symbolTable, descriptors, three_address):
             # TODO how do we actually print? :S
             assembly_line = assembly_line + f"CALL print, {line[-1]}"
             assembly.append(assembly_line)
-
+    print("=====================")
+    print("Assembly Code: ")
     return assembly
 
 # For testing: Prints the generated assembly code

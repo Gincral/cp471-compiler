@@ -20,10 +20,20 @@ def main():
 
     while line:
         while line.replace(" ", "") == "\n": line = input_file.readline()
+        print("=====================")
+        print("Lexer: ")
         tokenList = lexer(line.strip())
         if not (tokenList): raise Exception("lexer Error")
+
+        print("=====================")
+        print("Parser: ")
         par = parse(symbolTable, tokenList)
         if not (par): raise Exception("parser Error")
+        
+        print("=====================")
+        print("Symbol Table: ")
+        symbolTable.printTable()
+        print("=====================")
         inter(symbolTable, par)
         line = input_file.readline()
         print("=====================")
