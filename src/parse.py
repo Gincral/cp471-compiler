@@ -122,7 +122,7 @@ def dec(root):
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].type == 'lex' and tokenList[1].value in ['string', 'boolean', 'number'] and tokenList[2].type == 'id' and tokenList[3].value == '=':
-        data = Data(tokenList[2].value, tokenList[1].value, True)
+        data = Data(tokenList[2].value, tokenList[1].value, None)
         SymbolTable.appendData(data)
         root.children.append(Node(tokenList[0], "def"))
         root.children.append(Node(tokenList[1], "type"))

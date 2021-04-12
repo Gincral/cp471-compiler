@@ -33,13 +33,19 @@ def main():
         print("=====================")
         print("Symbol Table: ")
         symbolTable.printTable()
+
         print("=====================")
         inter(symbolTable, par)
         line = input_file.readline()
         print("=====================")
+
     threeAddr = getThreeAddr()
     print("=====================")
     assembly = generator(symbolTable, threeAddr, )
+
+    print("======================-------------------------------------------------------------------")
+    print("Symbol Table: ")
+    symbolTable.printTable()
 
     for line in assembly:
         output_file.write(line+'\n')
