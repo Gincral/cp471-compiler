@@ -1,1 +1,2 @@
-if (3 * 2 <= 5 + 6 * 3 - 8): { def number y = 0;} else:{ def number z = 0; }
+def number x = 3;
+if (3 * 2 <= 5 + 6 * 3 - 8): { def number y = x + 3;} else:{ def number z = 0; }
