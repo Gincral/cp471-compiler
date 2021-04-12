@@ -30,11 +30,8 @@ def main():
         par = parse(symbolTable, tokenList)
         if not (par): raise Exception("parser Error")
         
-        print("=====================")
-        print("Symbol Table: ")
         symbolTable.printTable()
 
-        print("=====================")
         inter(symbolTable, par)
         line = input_file.readline()
         print("=====================")
@@ -42,10 +39,6 @@ def main():
     threeAddr = getThreeAddr()
     print("=====================")
     assembly = generator(symbolTable, threeAddr, )
-
-    print("======================-------------------------------------------------------------------")
-    print("Symbol Table: ")
-    symbolTable.printTable()
 
     for line in assembly:
         output_file.write(line+'\n')

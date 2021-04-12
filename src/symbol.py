@@ -19,8 +19,12 @@ class SymbolTable:
         return None
 
     def printTable(self):
+        print("=====================")
+        print("Symbol Table: ")
+        print("{:10s}{:13s}{:10s}".format("id", "type", "value"))
         for data in self.dataList:
-            print(data.name, data.type, data.value)
+            print("{:10s}{:13s}{:10s}".format(data.name, data.type, data.value))
+        print("=====================")
     
 
 class Data:

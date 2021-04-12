@@ -122,7 +122,8 @@ def dec(root):
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].type == 'lex' and tokenList[1].value in ['string', 'boolean', 'number'] and tokenList[2].type == 'id' and tokenList[3].value == '=':
-        data = Data(tokenList[2].value, tokenList[1].value, None)
+        dataValue = getValue(tokenList)
+        data = Data(tokenList[2].value, tokenList[1].value, dataValue)
         SymbolTable.appendData(data)
         root.children.append(Node(tokenList[0], "def"))
         root.children.append(Node(tokenList[1], "type"))
@@ -371,3 +372,9 @@ def factor(root):
     else:
         print("len of token list should be 1")
         return False
+
+def getValue(tokenList):
+    str = ''
+    for i in range(4, len(tokenList)):
+        str += tokenList[i].value
+    return str
