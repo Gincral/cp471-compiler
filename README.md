@@ -1,7 +1,7 @@
 # cp471-compiler
 
 # Download from GitHub
-git clone https://github.com/HelloElijah/TagBased-Recommender-System.git
+git clone https://github.com/Gincral/cp471-compiler.git
 
 # Usage in terminal
 python src/main.py input/test1.txt output/result.txt
