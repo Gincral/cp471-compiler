@@ -122,7 +122,7 @@ def dec(root):
     tokenList = root.value
     le = len(tokenList)
     if tokenList[1].type == 'lex' and tokenList[1].value in ['string', 'boolean', 'number'] and tokenList[2].type == 'id' and tokenList[3].value == '=':
-        dataValue = getValue(tokenList)
+        dataValue = getValue(tokenList, 4)
         data = Data(tokenList[2].value, tokenList[1].value, dataValue)
         SymbolTable.appendData(data)
         root.children.append(Node(tokenList[0], "def"))
@@ -148,7 +148,10 @@ def assign(root):
         root.children.append(Node(tokenList[1], "="))
         root.children.append(boolN)
         data = SymbolTable.searchData(tokenList[0].value)
-        if data and data.type == bool(boolN): return True
+        if data and data.type == bool(boolN): 
+            dataValue = getValue(tokenList, 2)
+            SymbolTable.updateDataValue(tokenList[0].value, dataValue)
+            return True
         elif not data:
             print('Assign error: variable didnt get assign')
             return False
@@ -373,8 +376,8 @@ def factor(root):
         print("len of token list should be 1")
         return False
 
-def getValue(tokenList):
+def getValue(tokenList, index):
     str = ''
-    for i in range(4, len(tokenList)):
+    for i in range(index, len(tokenList)):
         str += tokenList[i].value
     return str
