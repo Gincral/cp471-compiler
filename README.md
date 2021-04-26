@@ -6,10 +6,10 @@ git clone https://github.com/Gincral/cp471-compiler.git
 # Usage in terminal
 'python3 main.py input_file_address output_file_address’
 <br/>
-python src/main.py input/test1.txt output/result.txt
-or 
-python3 src/main.py input/test1.txt output/result.txt
-
+python src/main.py input/test1.txt output/result.txt<br/>
+or <br/>
+python3 src/main.py input/test1.txt output/result.txt<br/>
+<br/>
 We provide 5 different test cases: test1.txt, test2.txt, test3.txt, test4.txt, test5.txt, you can try them all in input_file_address
 
 
