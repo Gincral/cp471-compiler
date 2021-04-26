@@ -5,7 +5,7 @@ git clone https://github.com/Gincral/cp471-compiler.git
 
 # Usage in terminal
 'python3 main.py input_file_address output_file_address’
-<br/>
+<br/><br/>
 python src/main.py input/test1.txt output/result.txt<br/>
 or <br/>
 python3 src/main.py input/test1.txt output/result.txt<br/>
